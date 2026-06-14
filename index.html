@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="אפליקציה לניהול נכס - מעקב הכנסות והוצאות חודשיות וחלוקת רווחים בין שותפים">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>%F0%9F%8F%A0</text></svg>">
 <title>ניהול נכס</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -58,7 +60,10 @@
   .dist-inputs input { border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; width: 100%; }
   .add-dist-btn { width: 100%; padding: 10px; background: #2D5A8E; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
   .empty-msg { color: #A0AEC0; font-size: 13px; text-align: center; padding: 10px 0; }
-  .history-title { font-size: 16px; font-weight: 700; color: #1A365D; margin-bottom: 16px; }
+  .history-title { font-size: 16px; font-weight: 700; color: #1A365D; }
+  .history-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .export-btn { background: #EBF4FF; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #2D5A8E; cursor: pointer; font-family: inherit; }
+  .hist-del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; }
   .hist-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
   .hist-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .hist-month { font-size: 15px; font-weight: 700; color: #1A365D; }
@@ -77,10 +82,10 @@
   <div class="header-inner">
     <h1>🏠 ניהול נכס</h1>
     <p>מעקב הוצאות והכנסות</p>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="switchView('entry', this)">הזנת חודש</button>
-      <button class="tab-btn" onclick="switchView('summary', this)">קופה וסיכום</button>
-      <button class="tab-btn" onclick="switchView('history', this)">היסטוריה</button>
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchView('entry', this)">הזנת חודש</button>
+      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('summary', this)">קופה וסיכום</button>
+      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('history', this)">היסטוריה</button>
     </div>
   </div>
 </div>
@@ -88,12 +93,12 @@
 <div class="main">
   <div id="view-entry" class="view active">
     <div class="month-nav">
-      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+      <button class="nav-btn" onclick="changeMonth(1)" aria-label="חודש קודם">›</button>
       <div>
         <div class="month-label" id="month-label"></div>
         <div class="saved-badge" id="saved-badge"></div>
       </div>
-      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+      <button class="nav-btn" onclick="changeMonth(-1)" aria-label="חודש הבא">‹</button>
     </div>
     <div id="cat-list"></div>
     <div class="month-summary">
@@ -129,9 +134,9 @@
       <div class="add-dist">
         <div class="add-label">+ הוסף חלוקה</div>
         <div class="dist-inputs">
-          <input type="date" id="dist-date">
-          <input type="number" id="dist-yossi" placeholder="יוסי ₪">
-          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪">
+          <input type="date" id="dist-date" aria-label="תאריך חלוקה">
+          <input type="number" id="dist-yossi" placeholder="יוסי ₪" min="0" aria-label="סכום יוסי">
+          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪" min="0" aria-label="סכום שרוליק">
         </div>
         <button class="add-dist-btn" onclick="addDistribution()">הוסף חלוקה</button>
       </div>
@@ -139,7 +144,10 @@
   </div>
 
   <div id="view-history" class="view">
-    <div class="history-title">היסטוריית חודשים</div>
+    <div class="history-title-row">
+      <div class="history-title">היסטוריית חודשים</div>
+      <button class="export-btn" onclick="exportCsv()" aria-label="ייצוא נתונים לקובץ CSV">⬇ ייצוא CSV</button>
+    </div>
     <div id="history-list"></div>
   </div>
 </div>
@@ -266,9 +274,10 @@ async function seedHistoricalData() {
 // ---- VIEWS ----
 window.switchView = function(v, btn) {
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => { el.classList.remove("active"); el.setAttribute("aria-selected", "false"); });
   document.getElementById("view-" + v).classList.add("active");
   btn.classList.add("active");
+  btn.setAttribute("aria-selected", "true");
   if (v === "summary") renderSummary();
   if (v === "history") renderHistory();
 }
@@ -293,8 +302,8 @@ function renderEntry() {
       <div class="cat-icon" style="background:${cat.color}20">${cat.icon}</div>
       <div class="cat-info">
         <div class="cat-label">${cat.label}</div>
-        <input class="cat-input" type="number" placeholder="0" value="${val}"
-          data-key="${cat.key}"
+        <input class="cat-input" type="number" placeholder="0" value="${val}" min="0"
+          data-key="${cat.key}" aria-label="${cat.label}"
           onfocus="this.style.borderColor='${cat.color}'"
           onblur="this.style.borderColor='#E2E8F0'"
           oninput="updateMonthlySummary()">
@@ -370,6 +379,9 @@ function monthBalance(entry) {
 }
 
 function renderSummary() {
+  const dateInput = document.getElementById("dist-date");
+  if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+
   const totalProfit = Object.values(allData).reduce((s,e) => s + monthBalance(e), 0);
   const totalDist   = allDist.reduce((s,d) => s + d.yossi + d.shrolik, 0);
   const cash        = totalProfit - totalDist;
@@ -446,11 +458,47 @@ function renderHistory() {
     card.innerHTML = `
       <div class="hist-card-top">
         <span class="hist-month">${MONTHS_HE[m-1]} ${y}</span>
-        <span class="hist-balance" style="color:${balance>=0?'#276749':'#E53E3E'}">${balance>=0?"+":""}₪${balance.toLocaleString()}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="hist-balance" style="color:${balance>=0?'#276749':'#E53E3E'}">${balance>=0?"+":""}₪${balance.toLocaleString()}</span>
+          <button class="hist-del-btn" onclick="deleteMonth('${k}')" aria-label="מחיקת ${MONTHS_HE[m-1]} ${y}">✕</button>
+        </div>
       </div>
       <div class="hist-tags">${tags}</div>`;
     list.appendChild(card);
   });
+}
+
+window.deleteMonth = async function(key) {
+  if (!confirm("למחוק את הנתונים של החודש הזה?")) return;
+  try {
+    await deleteDoc(doc(db, "months", key));
+    delete allData[key];
+    renderHistory();
+    if (monthKey(activeYear, activeMonth) === key) renderEntry();
+    showToast("✓ החודש נמחק");
+  } catch(e) { showToast("❌ שגיאה במחיקה"); }
+}
+
+// ---- EXPORT ----
+window.exportCsv = function() {
+  const rows = [["חודש", "הכנסה (שכירות)", ...CATEGORIES.filter(c => c.key !== "rent").map(c => c.label), "יתרה"]];
+  Object.keys(allData).sort().forEach(k => {
+    const entry = allData[k];
+    const row = [k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), monthBalance(entry)];
+    rows.push(row);
+  });
+  rows.push([]);
+  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סה״כ"]);
+  allDist.forEach(d => rows.push([d.date, d.yossi, d.shrolik, d.yossi + d.shrolik]));
+
+  const csv = "﻿" + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ניהול-נכס.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ---- INIT ----
