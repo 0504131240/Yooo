@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול נכס</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #1A202C; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: linear-gradient(135deg, #1A365D 0%, #2D5A8E 100%); padding: 20px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .header-inner { max-width: 700px; margin: 0 auto; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .header p { font-size: 13px; color: #A0C4FF; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn { padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.15); color: #CBD5E0; transition: all 0.2s; font-family: inherit; }
+  .tab-btn.active { background: #4A90D9; color: #fff; }
+
+  /* MAIN */
+  .main { max-width: 700px; margin: 0 auto; padding: 20px 16px; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* MONTH NAV */
+  .month-nav { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 14px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; }
+  .nav-btn { background: #EBF4FF; border: none; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 20px; color: #2D5A8E; display: flex; align-items: center; justify-content: center; }
+  .month-label { font-size: 20px; font-weight: 700; color: #1A365D; text-align: center; }
+  .saved-badge { font-size: 12px; color: #48BB78; text-align: center; margin-top: 2px; }
+
+  /* CATEGORY CARDS */
+  .cat-card { background: #fff; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .cat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .cat-info { flex: 1; }
+  .cat-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 4px; }
+  .cat-input { width: 100%; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 15px; outline: none; background: #F7FAFC; text-align: right; font-family: inherit; color: #1A202C; transition: border-color 0.2s; }
+  .cat-value { font-size: 14px; font-weight: 700; min-width: 70px; text-align: left; }
+
+  /* MONTH SUMMARY BOX */
+  .month-summary { background: linear-gradient(135deg, #1A365D, #2D5A8E); border-radius: 14px; padding: 20px; margin-top: 16px; color: #fff; }
+  .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .summary-row span:first-child { color: #A0C4FF; font-size: 13px; }
+  .summary-row span:last-child { font-weight: 700; }
+  .summary-divider { border-top: 1px solid rgba(255,255,255,0.2); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+  .summary-divider .label { font-weight: 700; font-size: 16px; }
+  .balance-amount { font-weight: 800; font-size: 22px; }
+
+  /* SAVE BUTTON */
+  .save-btn { width: 100%; margin-top: 16px; padding: 16px; background: #2D5A8E; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: inherit; }
+  .save-btn.saved { background: #48BB78; }
+
+  /* SUMMARY VIEW */
+  .cashbox { background: linear-gradient(135deg, #276749, #38A169); border-radius: 18px; padding: 28px; margin-bottom: 20px; color: #fff; text-align: center; box-shadow: 0 8px 24px rgba(39,103,73,0.3); }
+  .cashbox .label { font-size: 14px; color: #9AE6B4; margin-bottom: 6px; }
+  .cashbox .amount { font-size: 44px; font-weight: 800; letter-spacing: -1px; }
+  .cashbox .sub { font-size: 12px; color: #9AE6B4; margin-top: 8px; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: #fff; border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .stat-card .stat-label { font-size: 12px; color: #718096; margin-bottom: 4px; }
+  .stat-card .stat-amount { font-size: 24px; font-weight: 800; }
+
+  .dist-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .dist-panel h3 { font-size: 16px; font-weight: 700; color: #1A365D; margin-bottom: 16px; }
+  .dist-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F0F4F8; }
+  .dist-row .dist-date { font-size: 13px; font-weight: 600; color: #4A5568; }
+  .dist-row .dist-names { font-size: 12px; color: #718096; }
+  .dist-row .dist-total { font-size: 14px; font-weight: 700; color: #E53E3E; }
+  .del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; margin-right: 10px; }
+  .add-dist { margin-top: 16px; padding-top: 16px; border-top: 2px dashed #E2E8F0; }
+  .add-dist .add-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 10px; }
+  .dist-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .dist-inputs input { border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; width: 100%; }
+  .add-dist-btn { width: 100%; padding: 10px; background: #2D5A8E; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .empty-msg { color: #A0AEC0; font-size: 13px; text-align: center; padding: 10px 0; }
+
+  /* HISTORY VIEW */
+  .history-title { font-size: 16px; font-weight: 700; color: #1A365D; margin-bottom: 16px; }
+  .hist-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+  .hist-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .hist-month { font-size: 15px; font-weight: 700; color: #1A365D; }
+  .hist-balance { font-size: 16px; font-weight: 800; }
+  .hist-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .hist-tag { border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; }
+  .no-history { background: #fff; border-radius: 14px; padding: 40px; text-align: center; color: #A0AEC0; }
+  .no-history .emoji { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>🏠 ניהול נכס</h1>
+    <p>מעקב הוצאות והכנסות</p>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchView('entry')">הזנת חודש</button>
+      <button class="tab-btn" onclick="switchView('summary')">קופה וסיכום</button>
+      <button class="tab-btn" onclick="switchView('history')">היסטוריה</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ENTRY VIEW -->
+  <div id="view-entry" class="view active">
+    <div class="month-nav">
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
+      <div>
+        <div class="month-label" id="month-label"></div>
+        <div class="saved-badge" id="saved-badge"></div>
+      </div>
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    </div>
+
+    <div id="cat-list"></div>
+
+    <div class="month-summary">
+      <div class="summary-row">
+        <span>הכנסה (שכירות)</span>
+        <span id="sum-income">₪0</span>
+      </div>
+      <div class="summary-row">
+        <span>סך הוצאות</span>
+        <span id="sum-expenses" style="color:#FEB2B2">₪0</span>
+      </div>
+      <div class="summary-divider">
+        <span class="label">יתרה חודשית</span>
+        <span class="balance-amount" id="sum-balance">₪0</span>
+      </div>
+    </div>
+
+    <button class="save-btn" id="save-btn" onclick="saveMonth()">שמור חודש</button>
+  </div>
+
+  <!-- SUMMARY VIEW -->
+  <div id="view-summary" class="view">
+    <div class="cashbox">
+      <div class="label">💰 סה״כ בקופה</div>
+      <div class="amount" id="cash-amount">₪0</div>
+      <div class="sub" id="cash-sub"></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">סה״כ רווחים</div>
+        <div class="stat-amount" id="total-profit" style="color:#2D5A8E">₪0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">סה״כ חולק</div>
+        <div class="stat-amount" id="total-dist" style="color:#E53E3E">₪0</div>
+      </div>
+    </div>
+
+    <div class="dist-panel">
+      <h3>חלוקות לשותפים</h3>
+      <div id="dist-list"></div>
+      <div class="add-dist">
+        <div class="add-label">+ הוסף חלוקה</div>
+        <div class="dist-inputs">
+          <input type="date" id="dist-date" placeholder="תאריך">
+          <input type="number" id="dist-yossi" placeholder="יוסי ₪">
+          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪">
+        </div>
+        <button class="add-dist-btn" onclick="addDistribution()">הוסף חלוקה</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div id="view-history" class="view">
+    <div class="history-title">היסטוריית חודשים</div>
+    <div id="history-list"></div>
+  </div>
+
+</div>
+
+<script>
+const CATEGORIES = [
+  { key: "rent",        label: "שכירות",   icon: "🏠", color: "#4F7942" },
+  { key: "mortgage",    label: "משכנתא",   icon: "🏦", color: "#3B5998" },
+  { key: "electricity", label: "חשמל",     icon: "⚡", color: "#F0A500" },
+  { key: "water",       label: "מים",      icon: "💧", color: "#4AADCF" },
+  { key: "arnona",      label: "ארנונה",   icon: "🏛️", color: "#9B59B6" },
+  { key: "vaad",        label: "ועד בית",  icon: "🏢", color: "#E67E22" },
+  { key: "insurance",   label: "ביטוח",    icon: "🛡️", color: "#2ECC71" },
+  { key: "internet",    label: "אינטרנט",  icon: "🌐", color: "#1ABC9C" },
+  { key: "misc",        label: "שונות",    icon: "📦", color: "#95A5A6" },
+];
+
+const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+
+let activeYear  = new Date().getFullYear();
+let activeMonth = new Date().getMonth();
+
+function monthKey(y, m) { return y + "-" + String(m + 1).padStart(2,"0"); }
+
+function loadData()          { try { return JSON.parse(localStorage.getItem("prop_data") || "{}"); }          catch(e){ return {}; } }
+function loadDistributions() { try { return JSON.parse(localStorage.getItem("prop_dist") || "[]"); }          catch(e){ return []; } }
+function saveAllData(d)      { localStorage.setItem("prop_data", JSON.stringify(d)); }
+function saveAllDist(d)      { localStorage.setItem("prop_dist", JSON.stringify(d)); }
+
+/* ---- VIEWS ---- */
+function switchView(v) {
+  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  document.getElementById("view-" + v).classList.add("active");
+  event.target.classList.add("active");
+  if (v === "summary")  renderSummary();
+  if (v === "history")  renderHistory();
+}
+
+/* ---- ENTRY VIEW ---- */
+function renderEntry() {
+  const key  = monthKey(activeYear, activeMonth);
+  const data = loadData();
+  const entry = data[key] || {};
+
+  document.getElementById("month-label").textContent = MONTHS_HE[activeMonth] + " " + activeYear;
+  document.getElementById("saved-badge").textContent  = data[key] ? "✓ נשמר" : "";
+
+  const list = document.getElementById("cat-list");
+  list.innerHTML = "";
+
+  CATEGORIES.forEach(cat => {
+    const val = entry[cat.key] !== undefined ? entry[cat.key] : "";
+    const card = document.createElement("div");
+    card.className = "cat-card";
+    card.innerHTML = `
+      <div class="cat-icon" style="background:${cat.color}20">${cat.icon}</div>
+      <div class="cat-info">
+        <div class="cat-label">${cat.label}</div>
+        <input class="cat-input" type="number" placeholder="0" value="${val}"
+          data-key="${cat.key}"
+          onfocus="this.style.borderColor='${cat.color}'"
+          onblur="this.style.borderColor='#E2E8F0'"
+          oninput="updateMonthlySummary()">
+      </div>
+      <div class="cat-value" id="val-${cat.key}" style="color:${cat.color}">
+        ${val !== "" ? "₪" + Number(val).toLocaleString() : ""}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  updateMonthlySummary();
+  document.getElementById("save-btn").classList.remove("saved");
+  document.getElementById("save-btn").textContent = "שמור חודש";
+}
+
+function updateMonthlySummary() {
+  let income = 0, expenses = 0;
+  CATEGORIES.forEach(cat => {
+    const inp = document.querySelector(`[data-key="${cat.key}"]`);
+    if (!inp) return;
+    const v = parseFloat(inp.value) || 0;
+    document.getElementById("val-" + cat.key).textContent = inp.value !== "" ? "₪" + v.toLocaleString() : "";
+    if (cat.key === "rent") income = v; else expenses += v;
+  });
+  const balance = income - expenses;
+  document.getElementById("sum-income").textContent   = "₪" + income.toLocaleString();
+  document.getElementById("sum-expenses").textContent = "₪" + expenses.toLocaleString();
+  const balEl = document.getElementById("sum-balance");
+  balEl.textContent = (balance >= 0 ? "+" : "") + "₪" + balance.toLocaleString();
+  balEl.style.color = balance >= 0 ? "#68D391" : "#FEB2B2";
+}
+
+function changeMonth(dir) {
+  activeMonth -= dir;
+  if (activeMonth < 0)  { activeMonth = 11; activeYear--; }
+  if (activeMonth > 11) { activeMonth = 0;  activeYear++; }
+  renderEntry();
+}
+
+function saveMonth() {
+  const key  = monthKey(activeYear, activeMonth);
+  const data = loadData();
+  const entry = {};
+  CATEGORIES.forEach(cat => {
+    const inp = document.querySelector(`[data-key="${cat.key}"]`);
+    const v   = parseFloat(inp.value);
+    if (!isNaN(v) && inp.value !== "") entry[cat.key] = v;
+  });
+  data[key] = entry;
+  saveAllData(data);
+  document.getElementById("saved-badge").textContent  = "✓ נשמר";
+  const btn = document.getElementById("save-btn");
+  btn.classList.add("saved");
+  btn.textContent = "✓ נשמר בהצלחה!";
+}
+
+/* ---- SUMMARY VIEW ---- */
+function monthBalance(entry) {
+  const income   = entry.rent || 0;
+  const expenses = CATEGORIES.filter(c => c.key !== "rent").reduce((s,c) => s + (entry[c.key]||0), 0);
+  return income - expenses;
+}
+
+function renderSummary() {
+  const data  = loadData();
+  const dists = loadDistributions();
+
+  const totalProfit = Object.values(data).reduce((s, e) => s + monthBalance(e), 0);
+  const totalDist   = dists.reduce((s, d) => s + d.yossi + d.shrolik, 0);
+  const cash        = totalProfit - totalDist;
+  const months      = Object.keys(data).length;
+
+  document.getElementById("cash-amount").textContent  = "₪" + cash.toLocaleString();
+  document.getElementById("cash-sub").textContent     = "מתוך " + months + " חודשים מוזנים";
+  document.getElementById("total-profit").textContent = "₪" + totalProfit.toLocaleString();
+  document.getElementById("total-dist").textContent   = "₪" + totalDist.toLocaleString();
+
+  const list = document.getElementById("dist-list");
+  list.innerHTML = "";
+
+  if (dists.length === 0) {
+    list.innerHTML = '<div class="empty-msg">אין חלוקות עדיין</div>';
+    return;
+  }
+
+  dists.forEach(d => {
+    const row = document.createElement("div");
+    row.className = "dist-row";
+    row.innerHTML = `
+      <div>
+        <div class="dist-date">${d.date}</div>
+        <div class="dist-names">יוסי: ₪${d.yossi.toLocaleString()} | שרוליק: ₪${d.shrolik.toLocaleString()}</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="dist-total">₪${(d.yossi + d.shrolik).toLocaleString()}</span>
+        <button class="del-btn" onclick="removeDistribution(${d.id})">✕</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function addDistribution() {
+  const date    = document.getElementById("dist-date").value;
+  const yossi   = parseFloat(document.getElementById("dist-yossi").value) || 0;
+  const shrolik = parseFloat(document.getElementById("dist-shrolik").value) || 0;
+  if (!date) { alert("נא לבחור תאריך"); return; }
+  const dists = loadDistributions();
+  dists.push({ id: Date.now(), date, yossi, shrolik });
+  saveAllDist(dists);
+  document.getElementById("dist-date").value    = "";
+  document.getElementById("dist-yossi").value   = "";
+  document.getElementById("dist-shrolik").value = "";
+  renderSummary();
+}
+
+function removeDistribution(id) {
+  const dists = loadDistributions().filter(d => d.id !== id);
+  saveAllDist(dists);
+  renderSummary();
+}
+
+/* ---- HISTORY VIEW ---- */
+function renderHistory() {
+  const data = loadData();
+  const keys = Object.keys(data).sort().reverse();
+  const list = document.getElementById("history-list");
+  list.innerHTML = "";
+
+  if (keys.length === 0) {
+    list.innerHTML = '<div class="no-history"><div class="emoji">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
+    return;
+  }
+
+  keys.forEach(k => {
+    const [y, m] = k.split("-").map(Number);
+    const entry   = data[k] || {};
+    const balance = monthBalance(entry);
+    const card    = document.createElement("div");
+    card.className = "hist-card";
+
+    const tags = CATEGORIES.filter(c => entry[c.key]).map(c =>
+      `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${c.label}: ₪${entry[c.key].toLocaleString()}</span>`
+    ).join("");
+
+    card.innerHTML = `
+      <div class="hist-card-top">
+        <span class="hist-month">${MONTHS_HE[m-1]} ${y}</span>
+        <span class="hist-balance" style="color:${balance >= 0 ? '#276749' : '#E53E3E'}">${balance >= 0 ? "+" : ""}₪${balance.toLocaleString()}</span>
+      </div>
+      <div class="hist-tags">${tags}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+/* ---- INIT ---- */
+renderEntry();
+</script>
+</body>
+</html>
