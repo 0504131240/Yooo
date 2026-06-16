@@ -289,6 +289,7 @@ window.switchView = function(v, btn) {
   document.getElementById("view-" + v).classList.add("active");
   btn.classList.add("active");
   btn.setAttribute("aria-selected", "true");
+  if (v === "entry") renderEntry();
   if (v === "summary") renderSummary();
   if (v === "history") renderHistory();
 }
