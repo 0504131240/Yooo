@@ -87,15 +87,15 @@
     <h1>🏠 ניהול נכס</h1>
     <p>מעקב הוצאות והכנסות</p>
     <div class="tabs" role="tablist">
-      <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchView('entry', this)">הזנת חודש</button>
-      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('summary', this)">קופה וסיכום</button>
+      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('entry', this)">הזנת חודש</button>
+      <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchView('summary', this)">קופה וסיכום</button>
       <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('history', this)">היסטוריה</button>
     </div>
   </div>
 </div>
 
 <div class="main">
-  <div id="view-entry" class="view active">
+  <div id="view-entry" class="view">
     <div class="month-nav">
       <button class="nav-btn" onclick="changeMonth(1)" aria-label="חודש קודם">›</button>
       <div>
@@ -117,7 +117,7 @@
     <button class="save-btn" id="save-btn" onclick="saveMonth()">שמור חודש</button>
   </div>
 
-  <div id="view-summary" class="view">
+  <div id="view-summary" class="view active">
     <div class="cashbox">
       <div class="label">💰 סה״כ בקופה</div>
       <div class="amount" id="cash-amount">₪0</div>
@@ -541,7 +541,7 @@ window.exportCsv = function() {
 
 // ---- INIT ----
 document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
-loadAllData().then(() => { renderEntry(); });
+loadAllData().then(() => { renderSummary(); });
 
 </script>
 </body>
