@@ -496,9 +496,10 @@ function renderHistory() {
     const balance = monthBalance(entry);
     const card = document.createElement("div");
     card.className = "hist-card";
-    const tags = CATEGORIES.filter(c => entry[c.key]).map(c =>
-      `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${c.label}: ₪${entry[c.key].toLocaleString()}</span>`
-    ).join("");
+    const tags = CATEGORIES.filter(c => entry[c.key]).map(c => {
+      const label = (c.key === "misc" && entry.miscNote) ? escapeHtml(entry.miscNote) : c.label;
+      return `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${label}: ₪${entry[c.key].toLocaleString()}</span>`;
+    }).join("");
     card.innerHTML = `
       <div class="hist-card-top">
         <span class="hist-month">${MONTHS_HE[m-1]} ${y}</span>
@@ -507,8 +508,7 @@ function renderHistory() {
           <button class="hist-del-btn" onclick="deleteMonth('${k}')" aria-label="מחיקת ${MONTHS_HE[m-1]} ${y}">✕</button>
         </div>
       </div>
-      <div class="hist-tags">${tags}</div>
-      ${entry.miscNote ? `<div class="hist-note">📝 ${escapeHtml(entry.miscNote)}</div>` : ""}`;
+      <div class="hist-tags">${tags}</div>`;
     list.appendChild(card);
   });
 }
