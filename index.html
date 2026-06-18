@@ -37,7 +37,13 @@
   .cat-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 4px; }
   .cat-input { width: 100%; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 15px; outline: none; background: #F7FAFC; text-align: right; font-family: inherit; color: #1A202C; transition: border-color 0.2s; }
   .cat-value { font-size: 14px; font-weight: 700; min-width: 70px; text-align: left; }
-  .cat-note { width: 100%; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; background: #F7FAFC; text-align: right; font-family: inherit; color: #4A5568; margin-top: -4px; margin-bottom: 10px; transition: border-color 0.2s; }
+  .misc-section { flex-direction: column; align-items: stretch; gap: 0; }
+  .misc-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .misc-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .misc-row-note { flex: 2; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; background: #F7FAFC; color: #1A202C; transition: border-color 0.2s; }
+  .misc-row-amount { flex: 1; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; background: #F7FAFC; color: #1A202C; min-width: 80px; transition: border-color 0.2s; }
+  .misc-row-del { background: #FFF5F5; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #E53E3E; font-size: 12px; flex-shrink: 0; }
+  .misc-add-btn { margin-top: 4px; background: none; border: 1.5px dashed #CBD5E0; border-radius: 8px; padding: 8px; width: 100%; font-size: 13px; color: #95A5A6; cursor: pointer; font-family: inherit; }
   .month-summary { background: linear-gradient(135deg, #1A365D, #2D5A8E); border-radius: 14px; padding: 20px; margin-top: 16px; color: #fff; }
   .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
   .summary-row span:first-child { color: #A0C4FF; font-size: 13px; }
@@ -190,8 +196,8 @@ const CATEGORIES = [
   { key: "vaad",        label: "ועד בית",  icon: "🏢", color: "#E67E22" },
   { key: "insurance",   label: "ביטוח",    icon: "🛡️", color: "#2ECC71", default: 88 },
   { key: "internet",    label: "אינטרנט",  icon: "🌐", color: "#1ABC9C", default: 40 },
-  { key: "misc",        label: "שונות",    icon: "📦", color: "#95A5A6" },
 ];
+const MISC_COLOR = "#95A5A6";
 
 const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
 
@@ -206,6 +212,16 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+function getMiscItems(entry) {
+  if (entry.miscItems && entry.miscItems.length) return entry.miscItems;
+  if (entry.misc) return [{ amount: entry.misc, note: entry.miscNote || "" }];
+  return [];
+}
+
+function getMiscTotal(entry) {
+  return getMiscItems(entry).reduce((s, i) => s + (i.amount || 0), 0);
 }
 
 function showToast(msg) {
@@ -330,20 +346,23 @@ function renderEntry() {
         ${val !== "" ? "₪" + Number(val).toLocaleString() : ""}
       </div>`;
     list.appendChild(card);
-
-    if (cat.key === "misc") {
-      const noteInput = document.createElement("input");
-      noteInput.className = "cat-note";
-      noteInput.type = "text";
-      noteInput.id = "misc-note";
-      noteInput.placeholder = "הערה לשונות (לא חובה)";
-      noteInput.setAttribute("aria-label", "הערה לשונות");
-      noteInput.value = entry.miscNote || "";
-      noteInput.onfocus = () => noteInput.style.borderColor = cat.color;
-      noteInput.onblur = () => noteInput.style.borderColor = "#E2E8F0";
-      list.appendChild(noteInput);
-    }
   });
+
+  // misc section
+  const miscSection = document.createElement("div");
+  miscSection.className = "cat-card misc-section";
+  miscSection.innerHTML = `
+    <div class="misc-header">
+      <div class="cat-icon" style="background:${MISC_COLOR}20">📦</div>
+      <div style="flex:1;font-size:13px;font-weight:600;color:#4A5568">שונות</div>
+      <div style="font-size:14px;font-weight:700;color:${MISC_COLOR}" id="misc-total"></div>
+    </div>
+    <div id="misc-rows"></div>
+    <button class="misc-add-btn" onclick="addMiscItemRow('','')">+ הוסף שונות</button>`;
+  list.appendChild(miscSection);
+
+  getMiscItems(entry).forEach(item => addMiscItemRow(item.note, item.amount));
+  updateMiscTotal();
 
   updateMonthlySummary();
   const btn = document.getElementById("save-btn");
@@ -366,6 +385,7 @@ window.updateMonthlySummary = function() {
     if (el) el.textContent = inp.value !== "" ? "₪" + v.toLocaleString() : "";
     if (cat.key === "rent") income = v; else expenses += v;
   });
+  document.querySelectorAll(".misc-row-amount").forEach(inp => { expenses += parseFloat(inp.value) || 0; });
   const balance = income - expenses;
   document.getElementById("sum-income").textContent   = "₪" + income.toLocaleString();
   document.getElementById("sum-expenses").textContent = "₪" + expenses.toLocaleString();
@@ -388,6 +408,34 @@ window.goToToday = function() {
   renderEntry();
 }
 
+window.addMiscItemRow = function(note, amount) {
+  const row = document.createElement("div");
+  row.className = "misc-row";
+  row.innerHTML = `
+    <input type="text" class="misc-row-note" placeholder="פירוט" value="${escapeHtml(String(note || ""))}"
+      onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'">
+    <input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount || ""}"
+      onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'"
+      oninput="updateMiscTotal();updateMonthlySummary()">
+    <button class="misc-row-del" onclick="removeMiscItemRow(this)" aria-label="הסר שורה">✕</button>`;
+  document.getElementById("misc-rows").appendChild(row);
+  updateMiscTotal();
+  updateMonthlySummary();
+}
+
+window.removeMiscItemRow = function(btn) {
+  btn.closest(".misc-row").remove();
+  updateMiscTotal();
+  updateMonthlySummary();
+}
+
+function updateMiscTotal() {
+  let total = 0;
+  document.querySelectorAll(".misc-row-amount").forEach(inp => { total += parseFloat(inp.value) || 0; });
+  const el = document.getElementById("misc-total");
+  if (el) el.textContent = total > 0 ? "₪" + total.toLocaleString() : "";
+}
+
 window.saveMonth = async function() {
   const key = monthKey(activeYear, activeMonth);
   const entry = {};
@@ -396,8 +444,13 @@ window.saveMonth = async function() {
     const v = parseFloat(inp.value);
     if (!isNaN(v) && inp.value !== "") entry[cat.key] = v;
   });
-  const noteVal = document.getElementById("misc-note").value.trim();
-  if (noteVal) entry.miscNote = noteVal;
+  const miscItems = [];
+  document.querySelectorAll(".misc-row").forEach(row => {
+    const amount = parseFloat(row.querySelector(".misc-row-amount").value);
+    const note   = row.querySelector(".misc-row-note").value.trim();
+    if (!isNaN(amount) && amount > 0) miscItems.push({ note, amount });
+  });
+  if (miscItems.length) entry.miscItems = miscItems;
   const btn = document.getElementById("save-btn");
   btn.disabled = true;
   btn.textContent = "שומר...";
@@ -417,9 +470,9 @@ window.saveMonth = async function() {
 
 // ---- SUMMARY ----
 function monthBalance(entry) {
-  const income   = entry.rent || 0;
-  const expenses = CATEGORIES.filter(c => c.key !== "rent").reduce((s,c) => s + (entry[c.key]||0), 0);
-  return income - expenses;
+  const income      = entry.rent || 0;
+  const catExpenses = CATEGORIES.filter(c => c.key !== "rent").reduce((s,c) => s + (entry[c.key]||0), 0);
+  return income - catExpenses - getMiscTotal(entry);
 }
 
 function renderSummary() {
@@ -496,10 +549,14 @@ function renderHistory() {
     const balance = monthBalance(entry);
     const card = document.createElement("div");
     card.className = "hist-card";
-    const tags = CATEGORIES.filter(c => entry[c.key]).map(c => {
-      const label = (c.key === "misc" && entry.miscNote) ? escapeHtml(entry.miscNote) : c.label;
-      return `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${label}: ₪${entry[c.key].toLocaleString()}</span>`;
-    }).join("");
+    const tags = [
+      ...CATEGORIES.filter(c => entry[c.key]).map(c =>
+        `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${c.label}: ₪${entry[c.key].toLocaleString()}</span>`
+      ),
+      ...getMiscItems(entry).map(i =>
+        `<span class="hist-tag" style="background:${MISC_COLOR}18;color:${MISC_COLOR}">📦 ${i.note ? escapeHtml(i.note) : "שונות"}: ₪${i.amount.toLocaleString()}</span>`
+      )
+    ].join("");
     card.innerHTML = `
       <div class="hist-card-top">
         <span class="hist-month">${MONTHS_HE[m-1]} ${y}</span>
@@ -526,10 +583,13 @@ window.deleteMonth = async function(key) {
 
 // ---- EXPORT ----
 window.exportCsv = function() {
-  const rows = [["חודש", "הכנסה (שכירות)", ...CATEGORIES.filter(c => c.key !== "rent").map(c => c.label), "יתרה", "הערה"]];
+  const rows = [["חודש", "הכנסה (שכירות)", ...CATEGORIES.filter(c => c.key !== "rent").map(c => c.label), "שונות", "פירוט שונות", "יתרה"]];
   Object.keys(allData).sort().forEach(k => {
     const entry = allData[k];
-    const row = [k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), monthBalance(entry), entry.miscNote || ""];
+    const miscItems = getMiscItems(entry);
+    const miscTotal = getMiscTotal(entry);
+    const miscNotes = miscItems.map(i => i.note || "שונות").join(" | ");
+    const row = [k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), miscTotal, miscNotes, monthBalance(entry)];
     rows.push(row);
   });
   rows.push([]);
