@@ -657,11 +657,13 @@ loadAllData().then(ok => {
 </script>
 <script>
   if ('serviceWorker' in navigator) {
-    // Unregister all service workers to fix caching issues
+    // Unregister all old service workers
     navigator.serviceWorker.getRegistrations().then(regs => {
       regs.forEach(reg => reg.unregister());
     });
     caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    // Register new SW under a new filename (bypasses CDN cache of old sw.js)
+    navigator.serviceWorker.register('./sw2.js');
   }
 </script>
 </body>
