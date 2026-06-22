@@ -239,12 +239,19 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+  ]);
+}
+
 // ---- FIREBASE ----
 async function loadAllData() {
   try {
-    const snap = await getDocs(collection(db, "months"));
+    const snap = await withTimeout(getDocs(collection(db, "months")), 10000);
     snap.forEach(d => { allData[d.id] = d.data(); });
-    const dsnap = await getDocs(collection(db, "distributions"));
+    const dsnap = await withTimeout(getDocs(collection(db, "distributions")), 10000);
     allDist = [];
     dsnap.forEach(d => { allDist.push({ id: d.id, ...d.data() }); });
     allDist.sort((a,b) => a.date.localeCompare(b.date));
@@ -252,8 +259,9 @@ async function loadAllData() {
     return true;
   } catch(e) {
     console.error(e);
+    const msg = e.message === 'timeout' ? 'התחברות לשרת לקחה זמן רב' : (e.code || e.message || String(e));
     document.getElementById("cash-amount").textContent = "❌";
-    document.getElementById("cash-sub").textContent = e.code || e.message || String(e);
+    document.getElementById("cash-sub").textContent = msg;
     return false;
   }
 }
@@ -363,7 +371,6 @@ function renderEntry() {
     list.appendChild(card);
   });
 
-  // misc section
   const miscSection = document.createElement("div");
   miscSection.className = "cat-card misc-section";
   miscSection.innerHTML = `
