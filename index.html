@@ -205,6 +205,14 @@ let activeYear  = new Date().getFullYear();
 let activeMonth = new Date().getMonth();
 let allData = {};
 let allDist = [];
+let currentView = 'summary';
+const VIEW_ORDER = ['history', 'summary', 'entry'];
+const VIEW_BTN_IDX = { entry: 0, summary: 1, history: 2 };
+
+function navigateToView(v) {
+  const btn = document.querySelectorAll('.tab-btn')[VIEW_BTN_IDX[v]];
+  switchView(v, btn);
+}
 
 function monthKey(y, m) { return y + "-" + String(m + 1).padStart(2,"0"); }
 
@@ -306,6 +314,7 @@ async function seedHistoricalData() {
 
 // ---- VIEWS ----
 window.switchView = function(v, btn) {
+  currentView = v;
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(el => { el.classList.remove("active"); el.setAttribute("aria-selected", "false"); });
   document.getElementById("view-" + v).classList.add("active");
@@ -605,6 +614,24 @@ window.exportCsv = function() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ---- SWIPE ----
+(function() {
+  let startX = 0, startY = 0;
+  const el = document.querySelector('.main');
+  el.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const idx = VIEW_ORDER.indexOf(currentView);
+    if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
+    else if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
+  }, { passive: true });
+})();
 
 // ---- INIT ----
 document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
