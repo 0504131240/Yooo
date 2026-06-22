@@ -206,7 +206,8 @@ let activeMonth = new Date().getMonth();
 let allData = {};
 let allDist = [];
 let currentView = 'summary';
-const VIEW_ORDER = ['history', 'summary', 'entry'];
+// RTL order: entry is rightmost, history is leftmost
+const VIEW_ORDER = ['entry', 'summary', 'history'];
 const VIEW_BTN_IDX = { entry: 0, summary: 1, history: 2 };
 
 function navigateToView(v) {
@@ -628,7 +629,7 @@ window.exportCsv = function() {
   URL.revokeObjectURL(url);
 }
 
-// ---- SWIPE ----
+// ---- SWIPE (RTL: right=entry side, left=history side) ----
 (function() {
   let startX = 0, startY = 0;
   document.addEventListener('touchstart', e => {
@@ -638,10 +639,10 @@ window.exportCsv = function() {
   document.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
     const idx = VIEW_ORDER.indexOf(currentView);
-    if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
-    else if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
+    if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
+    else if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
   }, { passive: true });
 })();
 
