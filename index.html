@@ -107,13 +107,13 @@
 <div class="main">
   <div id="view-entry" class="view">
     <div class="month-nav">
-      <button class="nav-btn" onclick="changeMonth(1)">&#x203A;</button>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
       <div>
         <div class="month-label" id="month-label"></div>
         <div class="saved-badge" id="saved-badge"></div>
         <button class="today-btn" id="today-btn" onclick="goToToday()">↺ חודש נוכחי</button>
       </div>
-      <button class="nav-btn" onclick="changeMonth(-1)">&#x2039;</button>
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
     </div>
     <div id="cat-list"></div>
     <div class="month-summary">
@@ -129,17 +129,17 @@
 
   <div id="view-summary" class="view active">
     <div class="cashbox">
-      <div class="label">💰 סה"כ בקופה</div>
+      <div class="label">💰 סה״כ בקופה</div>
       <div class="amount" id="cash-amount">⏳</div>
       <div class="sub" id="cash-sub">מתחבר לשרת...</div>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">סה"כ רווחים</div>
+        <div class="stat-label">סה״כ רווחים</div>
         <div class="stat-amount" id="total-profit" style="color:#2D5A8E">₪0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">סה"כ חולק</div>
+        <div class="stat-label">סה״כ חולק</div>
         <div class="stat-amount" id="total-dist" style="color:#E53E3E">₪0</div>
       </div>
     </div>
@@ -194,7 +194,7 @@ var CATEGORIES = [
   { key: "mortgage",    label: "משכנתא",  icon: "🏦", color: "#3B5998" },
   { key: "electricity", label: "חשמל",    icon: "⚡", color: "#F0A500" },
   { key: "water",       label: "מים",     icon: "💧", color: "#4AADCF" },
-  { key: "arnona",      label: "ארנונה",  icon: "🏙️", color: "#9B59B6" },
+  { key: "arnona",      label: "ארנונה",  icon: "🏛️", color: "#9B59B6" },
   { key: "vaad",        label: "ועד בית", icon: "🏢", color: "#E67E22" },
   { key: "insurance",   label: "ביטוח",   icon: "🛡️", color: "#2ECC71", def: 88 },
   { key: "internet",    label: "אינטרנט", icon: "🌐", color: "#1ABC9C", def: 40 }
@@ -368,8 +368,8 @@ function renderEntry() {
         '<div class="cat-label">'+cat.label+'</div>'+
         '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
           ' data-key="'+cat.key+'"'+
-          ' onfocus="this.style.borderColor=\''+cat.color+'\'\''+
-          ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
+          ` onfocus="this.style.borderColor='${cat.color}'"` +
+          ` onblur="this.style.borderColor='#E2E8F0'"` +
           ' oninput="updateMonthlySummary()">'+
       '</div>'+
       '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+
@@ -386,7 +386,7 @@ function renderEntry() {
       '<div style="font-size:14px;font-weight:700;color:'+MISC_COLOR+'" id="misc-total"></div>'+
     '</div>'+
     '<div id="misc-rows"></div>'+
-    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\')"'>+ הוסף שונות</button>';
+    `<button class="misc-add-btn" onclick="addMiscRow('','')">+ הוסף שונות</button>`;
   list.appendChild(miscSec);
   getMiscItems(entry).forEach(function(item){ addMiscRow(item.note, item.amount); });
   updateMiscTotal();
@@ -435,12 +435,9 @@ function addMiscRow(note, amount) {
   var row = document.createElement('div');
   row.className = 'misc-row';
   row.innerHTML =
-    '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+escHtml(String(note||''))+'">'+
-      ' onfocus="this.style.borderColor=\''+MISC_COLOR+'\'\'  onblur="this.style.borderColor=\'#E2E8F0\'">';
-  '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+(amount||'')+'">'+
-      ' onfocus="this.style.borderColor=\''+MISC_COLOR+'\'\'  onblur="this.style.borderColor=\'#E2E8F0\'"'+
-      ' oninput="updateMiscTotal();updateMonthlySummary()">';
-  '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary()">✕</button>';
+    `<input type="text" class="misc-row-note" placeholder="פירוט" value="${escHtml(String(note||''))}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'">`+
+    `<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount||''}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="updateMiscTotal();updateMonthlySummary()">`+
+    `<button class="misc-row-del" onclick="this.closest('.misc-row').remove();updateMiscTotal();updateMonthlySummary()">✕</button>`;
   document.getElementById('misc-rows').appendChild(row);
   updateMiscTotal();
   updateMonthlySummary();
@@ -474,7 +471,7 @@ async function saveMonth() {
     await db.collection('months').doc(key).set(entry);
     allData[key]=entry;
     document.getElementById('saved-badge').textContent='✓ נשמר';
-    btn.classList.add('saved'); btn.textContent='✓ נשמר בהצלחא!';
+    btn.classList.add('saved'); btn.textContent='✓ נשמר בהצלחה!';
     showToast('✓ החודש נשמר בענן');
   } catch(e) {
     btn.disabled=false; btn.textContent='שמור חודש';
@@ -507,7 +504,7 @@ function renderSummary() {
       '</div>'+
       '<div style="display:flex;align-items:center">'+
         '<span class="dist-total">₪'+(d.yossi+d.shrolik).toLocaleString()+'</span>'+
-        '<button class="del-btn" onclick="removeDistribution(\''+d.id+'\')">✕</button>'+
+        `<button class="del-btn" onclick="removeDistribution('${d.id}')">✕</button>`+
       '</div>';
     list.appendChild(row);
   });
@@ -565,7 +562,7 @@ function renderHistory() {
         '<span class="hist-month">'+MONTHS_HE[m-1]+' '+y+'</span>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
-          '<button class="hist-del-btn" onclick="deleteMonth(\''+k+'\')">✕</button>'+
+          `<button class="hist-del-btn" onclick="deleteMonth('${k}')">✕</button>`+
         '</div>'+
       '</div>'+
       '<div class="hist-tags">'+tags+'</div>';
