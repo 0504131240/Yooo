@@ -657,13 +657,17 @@ loadAllData().then(ok => {
 </script>
 <script>
   if ('serviceWorker' in navigator) {
-    // Unregister all old service workers
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => reg.unregister());
+    navigator.serviceWorker.getRegistrations().then(async regs => {
+      for (const reg of regs) {
+        const url = (reg.active || reg.installing || reg.waiting || {}).scriptURL || '';
+        if (!url.endsWith('sw2.js')) {
+          await reg.unregister();
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      }
+      navigator.serviceWorker.register('./sw2.js');
     });
-    caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    // Register new SW under a new filename (bypasses CDN cache of old sw.js)
-    navigator.serviceWorker.register('./sw2.js');
   }
 </script>
 </body>
