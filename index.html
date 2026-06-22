@@ -97,8 +97,8 @@
     <h1>🏠 זבוטינצקי 9</h1>
     <p>מעקב הוצאות והכנסות</p>
     <div class="tabs" role="tablist">
-      <button class="tab-btn" role="tab" onclick="switchView('entry',this)">הזנת חודש</button>
       <button class="tab-btn active" role="tab" onclick="switchView('summary',this)">קופה וסיכום</button>
+      <button class="tab-btn" role="tab" onclick="switchView('entry',this)">הזנת חודש</button>
       <button class="tab-btn" role="tab" onclick="switchView('history',this)">היסטוריה</button>
     </div>
   </div>
@@ -257,8 +257,8 @@ var allData = {};
 var allDist = [];
 var currentView = 'summary';
 var offlineMode = false;
-var VIEW_ORDER = ['entry','summary','history'];
-var VIEW_BTN_IDX = {entry:0,summary:1,history:2};
+var VIEW_ORDER = ['summary','entry','history'];
+var VIEW_BTN_IDX = {summary:0,entry:1,history:2};
 
 function navigateToView(v) {
   var btn = document.querySelectorAll('.tab-btn')[VIEW_BTN_IDX[v]];
