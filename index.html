@@ -132,8 +132,8 @@
   <div id="view-summary" class="view active">
     <div class="cashbox">
       <div class="label">💰 סה״כ בקופה</div>
-      <div class="amount" id="cash-amount">₪0</div>
-      <div class="sub" id="cash-sub"></div>
+      <div class="amount" id="cash-amount">⏳</div>
+      <div class="sub" id="cash-sub">מתחבר לשרת...</div>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
@@ -252,6 +252,8 @@ async function loadAllData() {
     return true;
   } catch(e) {
     console.error(e);
+    document.getElementById("cash-amount").textContent = "❌";
+    document.getElementById("cash-sub").textContent = e.code || e.message || String(e);
     return false;
   }
 }
@@ -642,8 +644,6 @@ loadAllData().then(ok => {
   if (ok) {
     renderSummary();
   } else {
-    document.getElementById("cash-amount").textContent = "שגיאת חיבור";
-    document.getElementById("cash-sub").textContent = "לא ניתן להתחבר לשרת";
     document.getElementById("cash-amount").style.fontSize = "22px";
     const retryBtn = document.createElement("button");
     retryBtn.className = "save-btn";
