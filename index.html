@@ -249,7 +249,11 @@ async function loadAllData() {
     dsnap.forEach(d => { allDist.push({ id: d.id, ...d.data() }); });
     allDist.sort((a,b) => a.date.localeCompare(b.date));
     await seedHistoricalData();
-  } catch(e) { console.error(e); }
+    return true;
+  } catch(e) {
+    console.error(e);
+    return false;
+  }
 }
 
 async function seedHistoricalData() {
@@ -618,15 +622,14 @@ window.exportCsv = function() {
 // ---- SWIPE ----
 (function() {
   let startX = 0, startY = 0;
-  const el = document.querySelector('.main');
-  el.addEventListener('touchstart', e => {
+  document.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
   }, { passive: true });
-  el.addEventListener('touchend', e => {
+  document.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
     const idx = VIEW_ORDER.indexOf(currentView);
     if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
     else if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
@@ -635,7 +638,21 @@ window.exportCsv = function() {
 
 // ---- INIT ----
 document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
-loadAllData().then(() => { renderSummary(); });
+loadAllData().then(ok => {
+  if (ok) {
+    renderSummary();
+  } else {
+    document.getElementById("cash-amount").textContent = "שגיאת חיבור";
+    document.getElementById("cash-sub").textContent = "לא ניתן להתחבר לשרת";
+    document.getElementById("cash-amount").style.fontSize = "22px";
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "save-btn";
+    retryBtn.style.marginTop = "16px";
+    retryBtn.textContent = "🔄 נסה שוב";
+    retryBtn.onclick = () => location.reload();
+    document.querySelector(".cashbox").appendChild(retryBtn);
+  }
+});
 
 </script>
 <script>
