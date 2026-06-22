@@ -131,17 +131,17 @@
 
   <div id="view-summary" class="view active">
     <div class="cashbox">
-      <div class="label">💰 סה״כ בקופה</div>
+      <div class="label">💰 סהםכ בקופה</div>
       <div class="amount" id="cash-amount">⏳</div>
       <div class="sub" id="cash-sub">מתחבר לשרת...</div>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">סה״כ רווחים</div>
+        <div class="stat-label">סהםכ רווחים</div>
         <div class="stat-amount" id="total-profit" style="color:#2D5A8E">₪0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">סה״כ חולק</div>
+        <div class="stat-label">סהםכ חולק</div>
         <div class="stat-amount" id="total-dist" style="color:#E53E3E">₪0</div>
       </div>
     </div>
@@ -172,8 +172,8 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDdzHw1Z3ZWOmQQCTIFoiUGeuajwa0cSZI",
@@ -200,6 +200,55 @@ const CATEGORIES = [
 const MISC_COLOR = "#95A5A6";
 
 const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+
+const HISTORICAL_MONTHS = {
+  "2023-03": { rent:12650, mortgage:11896, electricity:167, insurance:88, vaad:180 },
+  "2023-04": { rent:12650, mortgage:7703, insurance:88, vaad:180 },
+  "2023-05": { rent:12650, mortgage:7710, arnona:1241, insurance:88, vaad:180 },
+  "2023-06": { rent:12650, mortgage:7935, arnona:1254, electricity:1452, misc:600, insurance:88, vaad:1260 },
+  "2023-07": { rent:12650, mortgage:7874, water:839, misc:1100, insurance:88 },
+  "2023-08": { rent:12650, mortgage:8002, arnona:1244, insurance:88 },
+  "2023-09": { rent:12650, mortgage:8008, electricity:1802, water:899, insurance:88 },
+  "2023-10": { rent:12650, mortgage:7892, electricity:1844, water:1032, arnona:1257, insurance:88 },
+  "2023-11": { rent:12650, mortgage:8016, water:784, misc:250, insurance:88, vaad:1080 },
+  "2023-12": { rent:12650, mortgage:7901, arnona:1267, electricity:2384, insurance:88 },
+  "2024-01": { rent:12650, mortgage:7963, water:848, misc:1000, insurance:88 },
+  "2024-02": { rent:12650, mortgage:7862, arnona:1238, electricity:1325, insurance:88 },
+  "2024-03": { rent:12650, mortgage:7623, water:940, misc:250, insurance:88, vaad:1080 },
+  "2024-04": { rent:12650, mortgage:7868, arnona:1254, electricity:1922, insurance:88 },
+  "2024-05": { rent:12650, mortgage:7762, water:876, misc:1500, insurance:88 },
+  "2024-06": { rent:12650, mortgage:7900, arnona:1259, electricity:1339, internet:40, insurance:88 },
+  "2024-07": { rent:12650, mortgage:7786, electricity:2092, misc:1900, internet:40, insurance:88, vaad:1080 },
+  "2024-08": { rent:12650, mortgage:7906, arnona:1298, water:874, misc:300, internet:40, insurance:88 },
+  "2024-09": { rent:12650, mortgage:7919, electricity:2667, water:1036, internet:40, insurance:88 },
+  "2024-10": { rent:12650, mortgage:7822, arnona:1281, water:816, internet:40, insurance:88 },
+  "2024-11": { rent:12650, mortgage:7936, electricity:1806, water:973, arnona:1261, internet:40, insurance:88 },
+  "2024-12": { rent:12650, mortgage:7829, electricity:1502, water:866, internet:40, insurance:88 },
+  "2025-01": { rent:12650, mortgage:7942, arnona:1286, electricity:1794, water:742, internet:40, insurance:88, vaad:1200 },
+  "2025-02": { rent:12650, mortgage:7941, electricity:1286, water:755, misc:1550, internet:40, insurance:88 },
+  "2025-03": { rent:12650, mortgage:7607, arnona:1321, electricity:1764, misc:350, internet:40, insurance:88 },
+  "2025-04": { rent:12650, mortgage:7953, water:990, internet:40, insurance:88 },
+  "2025-05": { rent:12650, mortgage:7848, arnona:1330, electricity:2704, water:634, misc:500, internet:40, insurance:88, vaad:1200 },
+  "2025-06": { rent:12650, mortgage:7965, electricity:1654, internet:40, insurance:88 },
+  "2025-07": { rent:12650, mortgage:7867, arnona:1349, water:929, misc:1820, internet:40, insurance:88 },
+  "2025-08": { rent:12650, mortgage:7990, electricity:1577, water:1103, internet:40, insurance:88 },
+  "2025-09": { rent:12650, mortgage:8000, arnona:1371, internet:40, insurance:88 },
+  "2025-10": { rent:12650, mortgage:7900, electricity:1666, internet:40, insurance:88 },
+  "2025-11": { rent:12650, mortgage:8001, arnona:1363, misc:750, internet:40, insurance:88 },
+  "2025-12": { rent:12650, mortgage:7966, arnona:1306, misc:350, internet:40, insurance:88 },
+  "2026-01": { rent:12650, mortgage:7829, arnona:1344, internet:40, insurance:88 },
+  "2026-02": { rent:12650, mortgage:12023, internet:40, insurance:88 },
+  "2026-03": { rent:12650, mortgage:7249, internet:40, insurance:88 },
+  "2026-04": { rent:12650, mortgage:7249, internet:40, insurance:88 },
+  "2026-05": { rent:12650, internet:40, insurance:88 },
+};
+const HISTORICAL_DISTS = [
+  { id: "d1", date: "2023-07-14", yossi: 5000, shrolik: 5000 },
+  { id: "d2", date: "2024-02-25", yossi: 8500, shrolik: 8500 },
+  { id: "d3", date: "2024-05-30", yossi: 5000, shrolik: 5000 },
+  { id: "d4", date: "2025-05-25", yossi: 10000, shrolik: 10000 },
+  { id: "d5", date: "2026-05-07", yossi: 10900, shrolik: 10900 },
+];
 
 let activeYear  = new Date().getFullYear();
 let activeMonth = new Date().getMonth();
@@ -257,71 +306,25 @@ async function loadAllData() {
     await seedHistoricalData();
     return true;
   } catch(e) {
-    console.error(e);
-    const msg = e.message === 'timeout' ? 'התחברות לשרת לקחה זמן רב' : (e.code || e.message || String(e));
-    document.getElementById("cash-amount").textContent = "❌";
-    document.getElementById("cash-sub").textContent = msg;
-    return false;
+    console.error('Firebase error, using local data:', e);
+    allData = { ...HISTORICAL_MONTHS };
+    allDist = HISTORICAL_DISTS.map(d => ({...d}));
+    allDist.sort((a,b) => a.date.localeCompare(b.date));
+    const errLabel = e.message === 'timeout' ? 'timeout' : (e.code || e.message || 'שגיאה');
+    document.getElementById("cash-sub").textContent = 'נתונים מקומיים (' + errLabel + ')';
+    return true;
   }
 }
 
 async function seedHistoricalData() {
   if (Object.keys(allData).length > 0) return;
-  const historical = {
-    "2023-03": { rent:12650, mortgage:11896, electricity:167, insurance:88, vaad:180 },
-    "2023-04": { rent:12650, mortgage:7703, insurance:88, vaad:180 },
-    "2023-05": { rent:12650, mortgage:7710, arnona:1241, insurance:88, vaad:180 },
-    "2023-06": { rent:12650, mortgage:7935, arnona:1254, electricity:1452, misc:600, insurance:88, vaad:1260 },
-    "2023-07": { rent:12650, mortgage:7874, water:839, misc:1100, insurance:88 },
-    "2023-08": { rent:12650, mortgage:8002, arnona:1244, insurance:88 },
-    "2023-09": { rent:12650, mortgage:8008, electricity:1802, water:899, insurance:88 },
-    "2023-10": { rent:12650, mortgage:7892, electricity:1844, water:1032, arnona:1257, insurance:88 },
-    "2023-11": { rent:12650, mortgage:8016, water:784, misc:250, insurance:88, vaad:1080 },
-    "2023-12": { rent:12650, mortgage:7901, arnona:1267, electricity:2384, insurance:88 },
-    "2024-01": { rent:12650, mortgage:7963, water:848, misc:1000, insurance:88 },
-    "2024-02": { rent:12650, mortgage:7862, arnona:1238, electricity:1325, insurance:88 },
-    "2024-03": { rent:12650, mortgage:7623, water:940, misc:250, insurance:88, vaad:1080 },
-    "2024-04": { rent:12650, mortgage:7868, arnona:1254, electricity:1922, insurance:88 },
-    "2024-05": { rent:12650, mortgage:7762, water:876, misc:1500, insurance:88 },
-    "2024-06": { rent:12650, mortgage:7900, arnona:1259, electricity:1339, internet:40, insurance:88 },
-    "2024-07": { rent:12650, mortgage:7786, electricity:2092, misc:1900, internet:40, insurance:88, vaad:1080 },
-    "2024-08": { rent:12650, mortgage:7906, arnona:1298, water:874, misc:300, internet:40, insurance:88 },
-    "2024-09": { rent:12650, mortgage:7919, electricity:2667, water:1036, internet:40, insurance:88 },
-    "2024-10": { rent:12650, mortgage:7822, arnona:1281, water:816, internet:40, insurance:88 },
-    "2024-11": { rent:12650, mortgage:7936, electricity:1806, water:973, arnona:1261, internet:40, insurance:88 },
-    "2024-12": { rent:12650, mortgage:7829, electricity:1502, water:866, internet:40, insurance:88 },
-    "2025-01": { rent:12650, mortgage:7942, arnona:1286, electricity:1794, water:742, internet:40, insurance:88, vaad:1200 },
-    "2025-02": { rent:12650, mortgage:7941, electricity:1286, water:755, misc:1550, internet:40, insurance:88 },
-    "2025-03": { rent:12650, mortgage:7607, arnona:1321, electricity:1764, misc:350, internet:40, insurance:88 },
-    "2025-04": { rent:12650, mortgage:7953, water:990, internet:40, insurance:88 },
-    "2025-05": { rent:12650, mortgage:7848, arnona:1330, electricity:2704, water:634, misc:500, internet:40, insurance:88, vaad:1200 },
-    "2025-06": { rent:12650, mortgage:7965, electricity:1654, internet:40, insurance:88 },
-    "2025-07": { rent:12650, mortgage:7867, arnona:1349, water:929, misc:1820, internet:40, insurance:88 },
-    "2025-08": { rent:12650, mortgage:7990, electricity:1577, water:1103, internet:40, insurance:88 },
-    "2025-09": { rent:12650, mortgage:8000, arnona:1371, internet:40, insurance:88 },
-    "2025-10": { rent:12650, mortgage:7900, electricity:1666, internet:40, insurance:88 },
-    "2025-11": { rent:12650, mortgage:8001, arnona:1363, misc:750, internet:40, insurance:88 },
-    "2025-12": { rent:12650, mortgage:7966, arnona:1306, misc:350, internet:40, insurance:88 },
-    "2026-01": { rent:12650, mortgage:7829, arnona:1344, internet:40, insurance:88 },
-    "2026-02": { rent:12650, mortgage:12023, internet:40, insurance:88 },
-    "2026-03": { rent:12650, mortgage:7249, internet:40, insurance:88 },
-    "2026-04": { rent:12650, mortgage:7249, internet:40, insurance:88 },
-    "2026-05": { rent:12650, internet:40, insurance:88 },
-  };
-  const distributions = [
-    { id: "d1", date: "2023-07-14", yossi: 5000, shrolik: 5000 },
-    { id: "d2", date: "2024-02-25", yossi: 8500, shrolik: 8500 },
-    { id: "d3", date: "2024-05-30", yossi: 5000, shrolik: 5000 },
-    { id: "d4", date: "2025-05-25", yossi: 10000, shrolik: 10000 },
-    { id: "d5", date: "2026-05-07", yossi: 10900, shrolik: 10900 },
-  ];
-  for (const [k,v] of Object.entries(historical)) {
+  for (const [k,v] of Object.entries(HISTORICAL_MONTHS)) {
     await setDoc(doc(db, "months", k), v);
     allData[k] = v;
   }
-  for (const d of distributions) {
+  for (const d of HISTORICAL_DISTS) {
     await setDoc(doc(db, "distributions", d.id), { date: d.date, yossi: d.yossi, shrolik: d.shrolik });
-    allDist.push(d);
+    allDist.push({...d});
   }
 }
 
@@ -492,7 +495,12 @@ function renderSummary() {
   const totalDist   = allDist.reduce((s,d) => s + d.yossi + d.shrolik, 0);
   const cash        = totalProfit - totalDist;
   document.getElementById("cash-amount").textContent  = "₪" + cash.toLocaleString();
-  document.getElementById("cash-sub").textContent     = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
+  const sub = document.getElementById("cash-sub");
+  if (!sub.textContent || sub.textContent === 'מתחבר לשרת...') {
+    sub.textContent = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
+  } else if (!sub.textContent.includes('מקומיים')) {
+    sub.textContent = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
+  }
   document.getElementById("total-profit").textContent = "₪" + totalProfit.toLocaleString();
   document.getElementById("total-dist").textContent   = "₪" + totalDist.toLocaleString();
   const list = document.getElementById("dist-list");
@@ -607,7 +615,7 @@ window.exportCsv = function() {
   URL.revokeObjectURL(url);
 }
 
-// SWIPE — RTL: swipe left=history, swipe right=entry
+// SWIPE — RTL: swipe left = history, swipe right = entry
 (function() {
   let startX = 0, startY = 0;
   document.addEventListener('touchstart', e => {
@@ -625,19 +633,7 @@ window.exportCsv = function() {
 })();
 
 document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
-loadAllData().then(ok => {
-  if (ok) {
-    renderSummary();
-  } else {
-    document.getElementById("cash-amount").style.fontSize = "22px";
-    const retryBtn = document.createElement("button");
-    retryBtn.className = "save-btn";
-    retryBtn.style.marginTop = "16px";
-    retryBtn.textContent = "🔄 נסה שוב";
-    retryBtn.onclick = () => location.reload();
-    document.querySelector(".cashbox").appendChild(retryBtn);
-  }
-});
+loadAllData().then(() => { renderSummary(); });
 </script>
 <script>
   if ('serviceWorker' in navigator) {
