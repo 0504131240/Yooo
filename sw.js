@@ -1,4 +1,4 @@
-const CACHE = 'property-v2';
+const CACHE = 'property-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
@@ -15,14 +15,16 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (!e.request.url.startsWith(self.location.origin)) return;
+  // Only intercept HTML page navigations, not API calls or other resources
+  if (e.request.mode !== 'navigate') return;
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        if (res.ok && res.headers.get('content-type')?.includes('text/html')) {
+          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        }
         return res;
       })
-      .catch(() => caches.match(e.request))
+      .catch(() => caches.match('./'))
   );
 });
