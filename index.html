@@ -172,8 +172,8 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDdzHw1Z3ZWOmQQCTIFoiUGeuajwa0cSZI",
@@ -608,7 +608,7 @@ window.exportCsv = function() {
     rows.push(row);
   });
   rows.push([]);
-  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סה״כ"]);
+  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סהִִכ"]);
   allDist.forEach(d => rows.push([d.date, d.yossi, d.shrolik, d.yossi + d.shrolik]));
 
   const csv = "﻿" + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
