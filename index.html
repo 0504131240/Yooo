@@ -657,13 +657,7 @@ loadAllData().then(ok => {
 </script>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      reg.update();
-    });
-    // Force old SW to activate immediately on next load
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+    navigator.serviceWorker.register('./sw.js').then(reg => reg.update());
   }
 </script>
 </body>
