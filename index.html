@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="אפליקציה לניהול נכס - מעקב הכנסות והוצאות חודשיות וחלוקת רווחים בין שותפים">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="manifest" href="manifest.json">
@@ -84,7 +83,6 @@
   .hist-month { font-size: 15px; font-weight: 700; color: #1A365D; }
   .hist-balance { font-size: 16px; font-weight: 800; }
   .hist-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .hist-note { margin-top: 10px; font-size: 12px; color: #718096; background: #F7FAFC; border-radius: 8px; padding: 8px 10px; }
   .hist-tag { border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; }
   .no-history { background: #fff; border-radius: 14px; padding: 40px; text-align: center; color: #A0AEC0; }
   .loading { text-align: center; padding: 40px; color: #718096; font-size: 14px; }
@@ -99,9 +97,9 @@
     <h1>🏠 זבוטינצקי 9</h1>
     <p>מעקב הוצאות והכנסות</p>
     <div class="tabs" role="tablist">
-      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('entry', this)">הזנת חודש</button>
-      <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchView('summary', this)">קופה וסיכום</button>
-      <button class="tab-btn" role="tab" aria-selected="false" onclick="switchView('history', this)">היסטוריה</button>
+      <button class="tab-btn" role="tab" onclick="switchView('entry',this)">הזנת חודש</button>
+      <button class="tab-btn active" role="tab" onclick="switchView('summary',this)">קופה וסיכום</button>
+      <button class="tab-btn" role="tab" onclick="switchView('history',this)">היסטוריה</button>
     </div>
   </div>
 </div>
@@ -109,13 +107,13 @@
 <div class="main">
   <div id="view-entry" class="view">
     <div class="month-nav">
-      <button class="nav-btn" onclick="changeMonth(1)" aria-label="חודש קודם">›</button>
+      <button class="nav-btn" onclick="changeMonth(1)">›</button>
       <div>
         <div class="month-label" id="month-label"></div>
         <div class="saved-badge" id="saved-badge"></div>
         <button class="today-btn" id="today-btn" onclick="goToToday()">↺ חודש נוכחי</button>
       </div>
-      <button class="nav-btn" onclick="changeMonth(-1)" aria-label="חודש הבא">‹</button>
+      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
     </div>
     <div id="cat-list"></div>
     <div class="month-summary">
@@ -131,17 +129,17 @@
 
   <div id="view-summary" class="view active">
     <div class="cashbox">
-      <div class="label">💰 סהםכ בקופה</div>
+      <div class="label">💰 סה״כ בקופה</div>
       <div class="amount" id="cash-amount">⏳</div>
       <div class="sub" id="cash-sub">מתחבר לשרת...</div>
     </div>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">סהםכ רווחים</div>
+        <div class="stat-label">סה״כ רווחים</div>
         <div class="stat-amount" id="total-profit" style="color:#2D5A8E">₪0</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">סהםכ חולק</div>
+        <div class="stat-label">סה״כ חולק</div>
         <div class="stat-amount" id="total-dist" style="color:#E53E3E">₪0</div>
       </div>
     </div>
@@ -151,9 +149,9 @@
       <div class="add-dist">
         <div class="add-label">+ הוסף חלוקה</div>
         <div class="dist-inputs">
-          <input type="date" id="dist-date" aria-label="תאריך חלוקה">
-          <input type="number" id="dist-yossi" placeholder="יוסי ₪" min="0" aria-label="סכום יוסי">
-          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪" min="0" aria-label="סכום שרוליק">
+          <input type="date" id="dist-date">
+          <input type="number" id="dist-yossi" placeholder="יוסי ₪" min="0">
+          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪" min="0">
         </div>
         <button class="add-dist-btn" onclick="addDistribution()">הוסף חלוקה</button>
       </div>
@@ -163,492 +161,472 @@
   <div id="view-history" class="view">
     <div class="history-title-row">
       <div class="history-title">היסטוריית חודשים</div>
-      <button class="export-btn" onclick="exportCsv()" aria-label="ייצוא נתונים לקובץ CSV">⬇ ייצוא CSV</button>
+      <button class="export-btn" onclick="exportCsv()">⬇ ייצוא CSV</button>
     </div>
     <div id="history-list"></div>
-</div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+<!-- Firebase 9 compat SDK — regular script tags, no modules -->
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 
-const firebaseConfig = {
+<script>
+firebase.initializeApp({
   apiKey: "AIzaSyDdzHw1Z3ZWOmQQCTIFoiUGeuajwa0cSZI",
   authDomain: "yossi20360.firebaseapp.com",
   projectId: "yossi20360",
   storageBucket: "yossi20360.firebasestorage.app",
   messagingSenderId: "182925041359",
   appId: "1:182925041359:web:2078bd4c57db060a8b21ba"
-};
+});
+var db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const CATEGORIES = [
-  { key: "rent",        label: "שכירות",   icon: "🏠", color: "#4F7942", default: 12650 },
-  { key: "mortgage",    label: "משכנתא",   icon: "🏦", color: "#3B5998" },
-  { key: "electricity", label: "חשמל",     icon: "⚡", color: "#F0A500" },
-  { key: "water",       label: "מים",      icon: "💧", color: "#4AADCF" },
-  { key: "arnona",      label: "ארנונה",   icon: "🏛️", color: "#9B59B6" },
-  { key: "vaad",        label: "ועד בית",  icon: "🏢", color: "#E67E22" },
-  { key: "insurance",   label: "ביטוח",    icon: "🛡️", color: "#2ECC71", default: 88 },
-  { key: "internet",    label: "אינטרנט",  icon: "🌐", color: "#1ABC9C", default: 40 },
+var CATEGORIES = [
+  { key: "rent",        label: "שכירות",  icon: "🏠", color: "#4F7942", def: 12650 },
+  { key: "mortgage",    label: "משכנתא",  icon: "🏦", color: "#3B5998" },
+  { key: "electricity", label: "חשמל",    icon: "⚡", color: "#F0A500" },
+  { key: "water",       label: "מים",     icon: "💧", color: "#4AADCF" },
+  { key: "arnona",      label: "ארנונה",  icon: "🏛️", color: "#9B59B6" },
+  { key: "vaad",        label: "ועד בית", icon: "🏢", color: "#E67E22" },
+  { key: "insurance",   label: "ביטוח",   icon: "🛡️", color: "#2ECC71", def: 88 },
+  { key: "internet",    label: "אינטרנט", icon: "🌐", color: "#1ABC9C", def: 40 }
 ];
-const MISC_COLOR = "#95A5A6";
+var MISC_COLOR = "#95A5A6";
+var MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
 
-const MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
-
-const HISTORICAL_MONTHS = {
-  "2023-03": { rent:12650, mortgage:11896, electricity:167, insurance:88, vaad:180 },
-  "2023-04": { rent:12650, mortgage:7703, insurance:88, vaad:180 },
-  "2023-05": { rent:12650, mortgage:7710, arnona:1241, insurance:88, vaad:180 },
-  "2023-06": { rent:12650, mortgage:7935, arnona:1254, electricity:1452, misc:600, insurance:88, vaad:1260 },
-  "2023-07": { rent:12650, mortgage:7874, water:839, misc:1100, insurance:88 },
-  "2023-08": { rent:12650, mortgage:8002, arnona:1244, insurance:88 },
-  "2023-09": { rent:12650, mortgage:8008, electricity:1802, water:899, insurance:88 },
-  "2023-10": { rent:12650, mortgage:7892, electricity:1844, water:1032, arnona:1257, insurance:88 },
-  "2023-11": { rent:12650, mortgage:8016, water:784, misc:250, insurance:88, vaad:1080 },
-  "2023-12": { rent:12650, mortgage:7901, arnona:1267, electricity:2384, insurance:88 },
-  "2024-01": { rent:12650, mortgage:7963, water:848, misc:1000, insurance:88 },
-  "2024-02": { rent:12650, mortgage:7862, arnona:1238, electricity:1325, insurance:88 },
-  "2024-03": { rent:12650, mortgage:7623, water:940, misc:250, insurance:88, vaad:1080 },
-  "2024-04": { rent:12650, mortgage:7868, arnona:1254, electricity:1922, insurance:88 },
-  "2024-05": { rent:12650, mortgage:7762, water:876, misc:1500, insurance:88 },
-  "2024-06": { rent:12650, mortgage:7900, arnona:1259, electricity:1339, internet:40, insurance:88 },
-  "2024-07": { rent:12650, mortgage:7786, electricity:2092, misc:1900, internet:40, insurance:88, vaad:1080 },
-  "2024-08": { rent:12650, mortgage:7906, arnona:1298, water:874, misc:300, internet:40, insurance:88 },
-  "2024-09": { rent:12650, mortgage:7919, electricity:2667, water:1036, internet:40, insurance:88 },
-  "2024-10": { rent:12650, mortgage:7822, arnona:1281, water:816, internet:40, insurance:88 },
-  "2024-11": { rent:12650, mortgage:7936, electricity:1806, water:973, arnona:1261, internet:40, insurance:88 },
-  "2024-12": { rent:12650, mortgage:7829, electricity:1502, water:866, internet:40, insurance:88 },
-  "2025-01": { rent:12650, mortgage:7942, arnona:1286, electricity:1794, water:742, internet:40, insurance:88, vaad:1200 },
-  "2025-02": { rent:12650, mortgage:7941, electricity:1286, water:755, misc:1550, internet:40, insurance:88 },
-  "2025-03": { rent:12650, mortgage:7607, arnona:1321, electricity:1764, misc:350, internet:40, insurance:88 },
-  "2025-04": { rent:12650, mortgage:7953, water:990, internet:40, insurance:88 },
-  "2025-05": { rent:12650, mortgage:7848, arnona:1330, electricity:2704, water:634, misc:500, internet:40, insurance:88, vaad:1200 },
-  "2025-06": { rent:12650, mortgage:7965, electricity:1654, internet:40, insurance:88 },
-  "2025-07": { rent:12650, mortgage:7867, arnona:1349, water:929, misc:1820, internet:40, insurance:88 },
-  "2025-08": { rent:12650, mortgage:7990, electricity:1577, water:1103, internet:40, insurance:88 },
-  "2025-09": { rent:12650, mortgage:8000, arnona:1371, internet:40, insurance:88 },
-  "2025-10": { rent:12650, mortgage:7900, electricity:1666, internet:40, insurance:88 },
-  "2025-11": { rent:12650, mortgage:8001, arnona:1363, misc:750, internet:40, insurance:88 },
-  "2025-12": { rent:12650, mortgage:7966, arnona:1306, misc:350, internet:40, insurance:88 },
-  "2026-01": { rent:12650, mortgage:7829, arnona:1344, internet:40, insurance:88 },
-  "2026-02": { rent:12650, mortgage:12023, internet:40, insurance:88 },
-  "2026-03": { rent:12650, mortgage:7249, internet:40, insurance:88 },
-  "2026-04": { rent:12650, mortgage:7249, internet:40, insurance:88 },
-  "2026-05": { rent:12650, internet:40, insurance:88 },
+var HIST_MONTHS = {
+  "2023-03":{rent:12650,mortgage:11896,electricity:167,insurance:88,vaad:180},
+  "2023-04":{rent:12650,mortgage:7703,insurance:88,vaad:180},
+  "2023-05":{rent:12650,mortgage:7710,arnona:1241,insurance:88,vaad:180},
+  "2023-06":{rent:12650,mortgage:7935,arnona:1254,electricity:1452,misc:600,insurance:88,vaad:1260},
+  "2023-07":{rent:12650,mortgage:7874,water:839,misc:1100,insurance:88},
+  "2023-08":{rent:12650,mortgage:8002,arnona:1244,insurance:88},
+  "2023-09":{rent:12650,mortgage:8008,electricity:1802,water:899,insurance:88},
+  "2023-10":{rent:12650,mortgage:7892,electricity:1844,water:1032,arnona:1257,insurance:88},
+  "2023-11":{rent:12650,mortgage:8016,water:784,misc:250,insurance:88,vaad:1080},
+  "2023-12":{rent:12650,mortgage:7901,arnona:1267,electricity:2384,insurance:88},
+  "2024-01":{rent:12650,mortgage:7963,water:848,misc:1000,insurance:88},
+  "2024-02":{rent:12650,mortgage:7862,arnona:1238,electricity:1325,insurance:88},
+  "2024-03":{rent:12650,mortgage:7623,water:940,misc:250,insurance:88,vaad:1080},
+  "2024-04":{rent:12650,mortgage:7868,arnona:1254,electricity:1922,insurance:88},
+  "2024-05":{rent:12650,mortgage:7762,water:876,misc:1500,insurance:88},
+  "2024-06":{rent:12650,mortgage:7900,arnona:1259,electricity:1339,internet:40,insurance:88},
+  "2024-07":{rent:12650,mortgage:7786,electricity:2092,misc:1900,internet:40,insurance:88,vaad:1080},
+  "2024-08":{rent:12650,mortgage:7906,arnona:1298,water:874,misc:300,internet:40,insurance:88},
+  "2024-09":{rent:12650,mortgage:7919,electricity:2667,water:1036,internet:40,insurance:88},
+  "2024-10":{rent:12650,mortgage:7822,arnona:1281,water:816,internet:40,insurance:88},
+  "2024-11":{rent:12650,mortgage:7936,electricity:1806,water:973,arnona:1261,internet:40,insurance:88},
+  "2024-12":{rent:12650,mortgage:7829,electricity:1502,water:866,internet:40,insurance:88},
+  "2025-01":{rent:12650,mortgage:7942,arnona:1286,electricity:1794,water:742,internet:40,insurance:88,vaad:1200},
+  "2025-02":{rent:12650,mortgage:7941,electricity:1286,water:755,misc:1550,internet:40,insurance:88},
+  "2025-03":{rent:12650,mortgage:7607,arnona:1321,electricity:1764,misc:350,internet:40,insurance:88},
+  "2025-04":{rent:12650,mortgage:7953,water:990,internet:40,insurance:88},
+  "2025-05":{rent:12650,mortgage:7848,arnona:1330,electricity:2704,water:634,misc:500,internet:40,insurance:88,vaad:1200},
+  "2025-06":{rent:12650,mortgage:7965,electricity:1654,internet:40,insurance:88},
+  "2025-07":{rent:12650,mortgage:7867,arnona:1349,water:929,misc:1820,internet:40,insurance:88},
+  "2025-08":{rent:12650,mortgage:7990,electricity:1577,water:1103,internet:40,insurance:88},
+  "2025-09":{rent:12650,mortgage:8000,arnona:1371,internet:40,insurance:88},
+  "2025-10":{rent:12650,mortgage:7900,electricity:1666,internet:40,insurance:88},
+  "2025-11":{rent:12650,mortgage:8001,arnona:1363,misc:750,internet:40,insurance:88},
+  "2025-12":{rent:12650,mortgage:7966,arnona:1306,misc:350,internet:40,insurance:88},
+  "2026-01":{rent:12650,mortgage:7829,arnona:1344,internet:40,insurance:88},
+  "2026-02":{rent:12650,mortgage:12023,internet:40,insurance:88},
+  "2026-03":{rent:12650,mortgage:7249,internet:40,insurance:88},
+  "2026-04":{rent:12650,mortgage:7249,internet:40,insurance:88},
+  "2026-05":{rent:12650,internet:40,insurance:88}
 };
-const HISTORICAL_DISTS = [
-  { id: "d1", date: "2023-07-14", yossi: 5000, shrolik: 5000 },
-  { id: "d2", date: "2024-02-25", yossi: 8500, shrolik: 8500 },
-  { id: "d3", date: "2024-05-30", yossi: 5000, shrolik: 5000 },
-  { id: "d4", date: "2025-05-25", yossi: 10000, shrolik: 10000 },
-  { id: "d5", date: "2026-05-07", yossi: 10900, shrolik: 10900 },
+var HIST_DISTS = [
+  {id:"d1",date:"2023-07-14",yossi:5000,shrolik:5000},
+  {id:"d2",date:"2024-02-25",yossi:8500,shrolik:8500},
+  {id:"d3",date:"2024-05-30",yossi:5000,shrolik:5000},
+  {id:"d4",date:"2025-05-25",yossi:10000,shrolik:10000},
+  {id:"d5",date:"2026-05-07",yossi:10900,shrolik:10900}
 ];
 
-let activeYear  = new Date().getFullYear();
-let activeMonth = new Date().getMonth();
-let allData = {};
-let allDist = [];
-let currentView = 'summary';
-const VIEW_ORDER = ['entry', 'summary', 'history'];
-const VIEW_BTN_IDX = { entry: 0, summary: 1, history: 2 };
+var activeYear  = new Date().getFullYear();
+var activeMonth = new Date().getMonth();
+var allData = {};
+var allDist = [];
+var currentView = 'summary';
+var offlineMode = false;
+var VIEW_ORDER = ['entry','summary','history'];
+var VIEW_BTN_IDX = {entry:0,summary:1,history:2};
 
 function navigateToView(v) {
-  const btn = document.querySelectorAll('.tab-btn')[VIEW_BTN_IDX[v]];
+  var btn = document.querySelectorAll('.tab-btn')[VIEW_BTN_IDX[v]];
   switchView(v, btn);
 }
 
-function monthKey(y, m) { return y + "-" + String(m + 1).padStart(2,"0"); }
+function monthKey(y, m) { return y + '-' + String(m+1).padStart(2,'0'); }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
-function getMiscItems(entry) {
-  if (entry.miscItems && entry.miscItems.length) return entry.miscItems;
-  if (entry.misc) return [{ amount: entry.misc, note: entry.miscNote || "" }];
+function getMiscItems(e) {
+  if (e.miscItems && e.miscItems.length) return e.miscItems;
+  if (e.misc) return [{amount:e.misc, note:e.miscNote||''}];
   return [];
 }
 
-function getMiscTotal(entry) {
-  return getMiscItems(entry).reduce((s, i) => s + (i.amount || 0), 0);
+function getMiscTotal(e) {
+  return getMiscItems(e).reduce(function(s,i){ return s+(i.amount||0); }, 0);
 }
 
 function showToast(msg) {
-  const t = document.getElementById("toast");
+  var t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2500);
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 
 function withTimeout(promise, ms) {
   return Promise.race([
     promise,
-    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); })
   ]);
+}
+
+function monthBalance(e) {
+  var income = e.rent || 0;
+  var exp = CATEGORIES.filter(function(c){ return c.key!=='rent'; })
+              .reduce(function(s,c){ return s+(e[c.key]||0); }, 0);
+  return income - exp - getMiscTotal(e);
+}
+
+function useFallback() {
+  offlineMode = true;
+  allData = Object.assign({}, HIST_MONTHS);
+  allDist = HIST_DISTS.map(function(d){ return Object.assign({},d); });
+  allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
 }
 
 async function loadAllData() {
   try {
-    const snap = await withTimeout(getDocs(collection(db, "months")), 10000);
-    snap.forEach(d => { allData[d.id] = d.data(); });
-    const dsnap = await withTimeout(getDocs(collection(db, "distributions")), 10000);
+    var snap = await withTimeout(db.collection('months').get(), 10000);
+    snap.forEach(function(d){ allData[d.id] = d.data(); });
+    var dsnap = await withTimeout(db.collection('distributions').get(), 10000);
     allDist = [];
-    dsnap.forEach(d => { allDist.push({ id: d.id, ...d.data() }); });
-    allDist.sort((a,b) => a.date.localeCompare(b.date));
-    await seedHistoricalData();
-    return true;
+    dsnap.forEach(function(d){ allDist.push(Object.assign({id:d.id}, d.data())); });
+    allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    if (Object.keys(allData).length === 0) await seedData();
   } catch(e) {
-    console.error('Firebase error, using local data:', e);
-    allData = { ...HISTORICAL_MONTHS };
-    allDist = HISTORICAL_DISTS.map(d => ({...d}));
-    allDist.sort((a,b) => a.date.localeCompare(b.date));
-    const errLabel = e.message === 'timeout' ? 'timeout' : (e.code || e.message || 'שגיאה');
-    document.getElementById("cash-sub").textContent = 'נתונים מקומיים (' + errLabel + ')';
-    return true;
+    console.error('Firebase:', e);
+    useFallback();
   }
 }
 
-async function seedHistoricalData() {
-  if (Object.keys(allData).length > 0) return;
-  for (const [k,v] of Object.entries(HISTORICAL_MONTHS)) {
-    await setDoc(doc(db, "months", k), v);
-    allData[k] = v;
+async function seedData() {
+  for (var k in HIST_MONTHS) {
+    await db.collection('months').doc(k).set(HIST_MONTHS[k]);
+    allData[k] = HIST_MONTHS[k];
   }
-  for (const d of HISTORICAL_DISTS) {
-    await setDoc(doc(db, "distributions", d.id), { date: d.date, yossi: d.yossi, shrolik: d.shrolik });
-    allDist.push({...d});
+  for (var i=0; i<HIST_DISTS.length; i++) {
+    var d = HIST_DISTS[i];
+    await db.collection('distributions').doc(d.id).set({date:d.date,yossi:d.yossi,shrolik:d.shrolik});
+    allDist.push(Object.assign({},d));
   }
 }
 
-window.switchView = function(v, btn) {
+function switchView(v, btn) {
   currentView = v;
-  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(el => { el.classList.remove("active"); el.setAttribute("aria-selected", "false"); });
-  document.getElementById("view-" + v).classList.add("active");
-  btn.classList.add("active");
-  btn.setAttribute("aria-selected", "true");
-  if (v === "entry") renderEntry();
-  if (v === "summary") renderSummary();
-  if (v === "history") renderHistory();
+  document.querySelectorAll('.view').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('view-'+v).classList.add('active');
+  btn.classList.add('active');
+  if (v==='entry') renderEntry();
+  if (v==='summary') renderSummary();
+  if (v==='history') renderHistory();
 }
 
 function renderEntry() {
-  const key   = monthKey(activeYear, activeMonth);
-  const entry = allData[key] || {};
-  const saved = !!allData[key];
-  document.getElementById("month-label").textContent = MONTHS_HE[activeMonth] + " " + activeYear;
-  document.getElementById("saved-badge").textContent = saved ? "✓ נשמר" : "";
-  const list = document.getElementById("cat-list");
-  list.innerHTML = "";
-  CATEGORIES.forEach(cat => {
-    const val = entry[cat.key] !== undefined ? entry[cat.key] : (saved ? "" : (cat.default !== undefined ? cat.default : ""));
-    const card = document.createElement("div");
-    card.className = "cat-card";
-    card.innerHTML = `
-      <div class="cat-icon" style="background:${cat.color}20">${cat.icon}</div>
-      <div class="cat-info">
-        <div class="cat-label">${cat.label}</div>
-        <input class="cat-input" type="number" placeholder="0" value="${val}" min="0"
-          data-key="${cat.key}" aria-label="${cat.label}"
-          onfocus="this.style.borderColor='${cat.color}'"
-          onblur="this.style.borderColor='#E2E8F0'"
-          oninput="updateMonthlySummary()">
-      </div>
-      <div class="cat-value" id="val-${cat.key}" style="color:${cat.color}">
-        ${val !== "" ? "₪" + Number(val).toLocaleString() : ""}
-      </div>`;
+  var key = monthKey(activeYear, activeMonth);
+  var entry = allData[key] || {};
+  var saved = !!allData[key];
+  document.getElementById('month-label').textContent = MONTHS_HE[activeMonth]+' '+activeYear;
+  document.getElementById('saved-badge').textContent = saved ? '✓ נשמר' : '';
+  var list = document.getElementById('cat-list');
+  list.innerHTML = '';
+  CATEGORIES.forEach(function(cat) {
+    var val = entry[cat.key]!==undefined ? entry[cat.key] : (saved?'':(cat.def!==undefined?cat.def:''));
+    var card = document.createElement('div');
+    card.className = 'cat-card';
+    card.innerHTML =
+      '<div class="cat-icon" style="background:'+cat.color+'20">'+cat.icon+'</div>'+
+      '<div class="cat-info">'+
+        '<div class="cat-label">'+cat.label+'</div>'+
+        '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
+          ' data-key="'+cat.key+'"'+
+          ' onfocus="this.style.borderColor=\''+cat.color+'\'"'+
+          ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
+          ' oninput="updateMonthlySummary()">'+
+      '</div>'+
+      '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+
+        (val!==''?'₪'+Number(val).toLocaleString():'')+
+      '</div>';
     list.appendChild(card);
   });
-  const miscSection = document.createElement("div");
-  miscSection.className = "cat-card misc-section";
-  miscSection.innerHTML = `
-    <div class="misc-header">
-      <div class="cat-icon" style="background:${MISC_COLOR}20">📦</div>
-      <div style="flex:1;font-size:13px;font-weight:600;color:#4A5568">שונות</div>
-      <div style="font-size:14px;font-weight:700;color:${MISC_COLOR}" id="misc-total"></div>
-    </div>
-    <div id="misc-rows"></div>
-    <button class="misc-add-btn" onclick="addMiscItemRow('','')">+ הוסף שונות</button>`;
-  list.appendChild(miscSection);
-  getMiscItems(entry).forEach(item => addMiscItemRow(item.note, item.amount));
+  var miscSec = document.createElement('div');
+  miscSec.className = 'cat-card misc-section';
+  miscSec.innerHTML =
+    '<div class="misc-header">'+
+      '<div class="cat-icon" style="background:'+MISC_COLOR+'20">📦</div>'+
+      '<div style="flex:1;font-size:13px;font-weight:600;color:#4A5568">שונות</div>'+
+      '<div style="font-size:14px;font-weight:700;color:'+MISC_COLOR+'" id="misc-total"></div>'+
+    '</div>'+
+    '<div id="misc-rows"></div>'+
+    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\')"'>+ הוסף שונות</button>';
+  list.appendChild(miscSec);
+  getMiscItems(entry).forEach(function(item){ addMiscRow(item.note, item.amount); });
   updateMiscTotal();
   updateMonthlySummary();
-  const btn = document.getElementById("save-btn");
-  btn.classList.remove("saved");
-  btn.textContent = "שמור חודש";
+  var btn = document.getElementById('save-btn');
+  btn.classList.remove('saved');
+  btn.textContent = 'שמור חודש';
   btn.disabled = false;
-  const now = new Date();
-  document.getElementById("today-btn").disabled = (activeYear === now.getFullYear() && activeMonth === now.getMonth());
+  var now = new Date();
+  document.getElementById('today-btn').disabled = (activeYear===now.getFullYear()&&activeMonth===now.getMonth());
 }
 
-window.updateMonthlySummary = function() {
-  let income = 0, expenses = 0;
-  CATEGORIES.forEach(cat => {
-    const inp = document.querySelector(`[data-key="${cat.key}"]`);
+function updateMonthlySummary() {
+  var income=0, expenses=0;
+  CATEGORIES.forEach(function(cat){
+    var inp = document.querySelector('[data-key="'+cat.key+'"]');
     if (!inp) return;
-    const v = parseFloat(inp.value) || 0;
-    const el = document.getElementById("val-" + cat.key);
-    if (el) el.textContent = inp.value !== "" ? "₪" + v.toLocaleString() : "";
-    if (cat.key === "rent") income = v; else expenses += v;
+    var v = parseFloat(inp.value)||0;
+    var el = document.getElementById('val-'+cat.key);
+    if (el) el.textContent = inp.value!==''?'₪'+v.toLocaleString():'';
+    if (cat.key==='rent') income=v; else expenses+=v;
   });
-  document.querySelectorAll(".misc-row-amount").forEach(inp => { expenses += parseFloat(inp.value) || 0; });
-  const balance = income - expenses;
-  document.getElementById("sum-income").textContent   = "₪" + income.toLocaleString();
-  document.getElementById("sum-expenses").textContent = "₪" + expenses.toLocaleString();
-  const balEl = document.getElementById("sum-balance");
-  balEl.textContent = (balance >= 0 ? "+" : "") + "₪" + balance.toLocaleString();
-  balEl.style.color = balance >= 0 ? "#68D391" : "#FEB2B2";
+  document.querySelectorAll('.misc-row-amount').forEach(function(inp){ expenses+=parseFloat(inp.value)||0; });
+  var bal = income-expenses;
+  document.getElementById('sum-income').textContent = '₪'+income.toLocaleString();
+  document.getElementById('sum-expenses').textContent = '₪'+expenses.toLocaleString();
+  var balEl = document.getElementById('sum-balance');
+  balEl.textContent = (bal>=0?'+':'')+'₪'+bal.toLocaleString();
+  balEl.style.color = bal>=0?'#68D391':'#FEB2B2';
 }
 
-window.changeMonth = function(dir) {
+function changeMonth(dir) {
   activeMonth -= dir;
-  if (activeMonth < 0)  { activeMonth = 11; activeYear--; }
-  if (activeMonth > 11) { activeMonth = 0;  activeYear++; }
+  if (activeMonth<0)  { activeMonth=11; activeYear--; }
+  if (activeMonth>11) { activeMonth=0;  activeYear++; }
   renderEntry();
 }
 
-window.goToToday = function() {
-  const now = new Date();
-  activeYear  = now.getFullYear();
-  activeMonth = now.getMonth();
+function goToToday() {
+  var now = new Date();
+  activeYear=now.getFullYear(); activeMonth=now.getMonth();
   renderEntry();
 }
 
-window.addMiscItemRow = function(note, amount) {
-  const row = document.createElement("div");
-  row.className = "misc-row";
-  row.innerHTML = `
-    <input type="text" class="misc-row-note" placeholder="פירוט" value="${escapeHtml(String(note || ""))}"
-      onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'">
-    <input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount || ""}"
-      onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'"
-      oninput="updateMiscTotal();updateMonthlySummary()">
-    <button class="misc-row-del" onclick="removeMiscItemRow(this)" aria-label="הסר שורה">✕</button>`;
-  document.getElementById("misc-rows").appendChild(row);
-  updateMiscTotal();
-  updateMonthlySummary();
-}
-
-window.removeMiscItemRow = function(btn) {
-  btn.closest(".misc-row").remove();
+function addMiscRow(note, amount) {
+  var row = document.createElement('div');
+  row.className = 'misc-row';
+  row.innerHTML =
+    '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+escHtml(String(note||''))+'">'+
+      ' onfocus="this.style.borderColor=\''+MISC_COLOR+'\'" onblur="this.style.borderColor=\'#E2E8F0\'"'+
+    '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+(amount||'')+'">'+
+      ' onfocus="this.style.borderColor=\''+MISC_COLOR+'\'" onblur="this.style.borderColor=\'#E2E8F0\'"'+
+      ' oninput="updateMiscTotal();updateMonthlySummary()"'+
+    '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary()">✕</button>';
+  document.getElementById('misc-rows').appendChild(row);
   updateMiscTotal();
   updateMonthlySummary();
 }
 
 function updateMiscTotal() {
-  let total = 0;
-  document.querySelectorAll(".misc-row-amount").forEach(inp => { total += parseFloat(inp.value) || 0; });
-  const el = document.getElementById("misc-total");
-  if (el) el.textContent = total > 0 ? "₪" + total.toLocaleString() : "";
+  var total=0;
+  document.querySelectorAll('.misc-row-amount').forEach(function(inp){ total+=parseFloat(inp.value)||0; });
+  var el = document.getElementById('misc-total');
+  if (el) el.textContent = total>0?'₪'+total.toLocaleString():'';
 }
 
-window.saveMonth = async function() {
-  const key = monthKey(activeYear, activeMonth);
-  const entry = {};
-  CATEGORIES.forEach(cat => {
-    const inp = document.querySelector(`[data-key="${cat.key}"]`);
-    const v = parseFloat(inp.value);
-    if (!isNaN(v) && inp.value !== "") entry[cat.key] = v;
+async function saveMonth() {
+  var key = monthKey(activeYear, activeMonth);
+  var entry = {};
+  CATEGORIES.forEach(function(cat){
+    var inp = document.querySelector('[data-key="'+cat.key+'"]');
+    var v = parseFloat(inp.value);
+    if (!isNaN(v) && inp.value!=='') entry[cat.key]=v;
   });
-  const miscItems = [];
-  document.querySelectorAll(".misc-row").forEach(row => {
-    const amount = parseFloat(row.querySelector(".misc-row-amount").value);
-    const note   = row.querySelector(".misc-row-note").value.trim();
-    if (!isNaN(amount) && amount > 0) miscItems.push({ note, amount });
+  var miscItems=[];
+  document.querySelectorAll('.misc-row').forEach(function(row){
+    var amt = parseFloat(row.querySelector('.misc-row-amount').value);
+    var note = row.querySelector('.misc-row-note').value.trim();
+    if (!isNaN(amt)&&amt>0) miscItems.push({note:note,amount:amt});
   });
-  if (miscItems.length) entry.miscItems = miscItems;
-  const btn = document.getElementById("save-btn");
-  btn.disabled = true;
-  btn.textContent = "שומר...";
+  if (miscItems.length) entry.miscItems=miscItems;
+  var btn = document.getElementById('save-btn');
+  btn.disabled=true; btn.textContent='שומר...';
   try {
-    await setDoc(doc(db, "months", key), entry);
-    allData[key] = entry;
-    document.getElementById("saved-badge").textContent = "✓ נשמר";
-    btn.classList.add("saved");
-    btn.textContent = "✓ נשמר בהצלחה!";
-    showToast("✓ החודש נשמר בענן");
+    await db.collection('months').doc(key).set(entry);
+    allData[key]=entry;
+    document.getElementById('saved-badge').textContent='✓ נשמר';
+    btn.classList.add('saved'); btn.textContent='✓ נשמר בהצלחה!';
+    showToast('✓ החודש נשמר בענן');
   } catch(e) {
-    btn.disabled = false;
-    btn.textContent = "שמור חודש";
-    showToast("❌ שגיאה בשמירה");
+    btn.disabled=false; btn.textContent='שמור חודש';
+    showToast('❌ שגיאה בשמירה');
   }
-}
-
-function monthBalance(entry) {
-  const income      = entry.rent || 0;
-  const catExpenses = CATEGORIES.filter(c => c.key !== "rent").reduce((s,c) => s + (entry[c.key]||0), 0);
-  return income - catExpenses - getMiscTotal(entry);
 }
 
 function renderSummary() {
-  const dateInput = document.getElementById("dist-date");
-  if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
-  const totalProfit = Object.values(allData).reduce((s,e) => s + monthBalance(e), 0);
-  const totalDist   = allDist.reduce((s,d) => s + d.yossi + d.shrolik, 0);
-  const cash        = totalProfit - totalDist;
-  document.getElementById("cash-amount").textContent  = "₪" + cash.toLocaleString();
-  const sub = document.getElementById("cash-sub");
-  if (!sub.textContent || sub.textContent === 'מתחבר לשרת...') {
-    sub.textContent = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
-  } else if (!sub.textContent.includes('מקומיים')) {
-    sub.textContent = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
-  }
-  document.getElementById("total-profit").textContent = "₪" + totalProfit.toLocaleString();
-  document.getElementById("total-dist").textContent   = "₪" + totalDist.toLocaleString();
-  const list = document.getElementById("dist-list");
-  list.innerHTML = "";
-  if (allDist.length === 0) { list.innerHTML = '<div class="empty-msg">אין חלוקות עדיין</div>'; return; }
-  allDist.forEach(d => {
-    const row = document.createElement("div");
-    row.className = "dist-row";
-    row.innerHTML = `
-      <div>
-        <div class="dist-date">${d.date}</div>
-        <div class="dist-names">יוסי: ₪${d.yossi.toLocaleString()} | שרוליק: ₪${d.shrolik.toLocaleString()}</div>
-      </div>
-      <div style="display:flex;align-items:center">
-        <span class="dist-total">₪${(d.yossi+d.shrolik).toLocaleString()}</span>
-        <button class="del-btn" onclick="removeDistribution('${d.id}')">✕</button>
-      </div>`;
+  var di = document.getElementById('dist-date');
+  if (!di.value) di.value = new Date().toISOString().slice(0,10);
+  var totalProfit = Object.values(allData).reduce(function(s,e){ return s+monthBalance(e); }, 0);
+  var totalDist   = allDist.reduce(function(s,d){ return s+d.yossi+d.shrolik; }, 0);
+  var cash = totalProfit-totalDist;
+  document.getElementById('cash-amount').textContent = '₪'+cash.toLocaleString();
+  document.getElementById('cash-sub').textContent = offlineMode
+    ? 'נתונים מקומיים – '+Object.keys(allData).length+' חודשים'
+    : 'מתוך '+Object.keys(allData).length+' חודשים מוזנים';
+  document.getElementById('total-profit').textContent = '₪'+totalProfit.toLocaleString();
+  document.getElementById('total-dist').textContent   = '₪'+totalDist.toLocaleString();
+  var list = document.getElementById('dist-list');
+  list.innerHTML='';
+  if (!allDist.length) { list.innerHTML='<div class="empty-msg">אין חלוקות עדיין</div>'; return; }
+  allDist.forEach(function(d){
+    var row = document.createElement('div');
+    row.className='dist-row';
+    row.innerHTML=
+      '<div>'+
+        '<div class="dist-date">'+d.date+'</div>'+
+        '<div class="dist-names">יוסי: ₪'+d.yossi.toLocaleString()+' | שרוליק: ₪'+d.shrolik.toLocaleString()+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center">'+
+        '<span class="dist-total">₪'+(d.yossi+d.shrolik).toLocaleString()+'</span>'+
+        '<button class="del-btn" onclick="removeDistribution(\''+d.id+'\')"'>✕</button>'+
+      '</div>';
     list.appendChild(row);
   });
 }
 
-window.addDistribution = async function() {
-  const date    = document.getElementById("dist-date").value;
-  const yossi   = parseFloat(document.getElementById("dist-yossi").value) || 0;
-  const shrolik = parseFloat(document.getElementById("dist-shrolik").value) || 0;
-  if (!date) { showToast("נא לבחור תאריך"); return; }
-  const id = "d" + Date.now();
+async function addDistribution() {
+  var date    = document.getElementById('dist-date').value;
+  var yossi   = parseFloat(document.getElementById('dist-yossi').value)||0;
+  var shrolik = parseFloat(document.getElementById('dist-shrolik').value)||0;
+  if (!date) { showToast('נא לבחור תאריך'); return; }
+  var id = 'd'+Date.now();
   try {
-    await setDoc(doc(db, "distributions", id), { date, yossi, shrolik });
-    allDist.push({ id, date, yossi, shrolik });
-    allDist.sort((a,b) => a.date.localeCompare(b.date));
-    document.getElementById("dist-date").value    = "";
-    document.getElementById("dist-yossi").value   = "";
-    document.getElementById("dist-shrolik").value = "";
+    await db.collection('distributions').doc(id).set({date:date,yossi:yossi,shrolik:shrolik});
+    allDist.push({id:id,date:date,yossi:yossi,shrolik:shrolik});
+    allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    document.getElementById('dist-date').value='';
+    document.getElementById('dist-yossi').value='';
+    document.getElementById('dist-shrolik').value='';
     renderSummary();
-    showToast("✓ חלוקה נשמרה");
-  } catch(e) { showToast("❌ שגיאה בשמירה"); }
+    showToast('✓ חלוקה נשמרה');
+  } catch(e) { showToast('❌ שגיאה בשמירה'); }
 }
 
-window.removeDistribution = async function(id) {
+async function removeDistribution(id) {
   try {
-    await deleteDoc(doc(db, "distributions", id));
-    allDist = allDist.filter(d => d.id !== id);
+    await db.collection('distributions').doc(id).delete();
+    allDist = allDist.filter(function(d){ return d.id!==id; });
     renderSummary();
-    showToast("✓ נמחק");
-  } catch(e) { showToast("❌ שגיאה במחיקה"); }
+    showToast('✓ נמחק');
+  } catch(e) { showToast('❌ שגיאה במחיקה'); }
 }
 
 function renderHistory() {
-  const keys = Object.keys(allData).sort().reverse();
-  const list = document.getElementById("history-list");
-  list.innerHTML = "";
-  if (keys.length === 0) {
-    list.innerHTML = '<div class="no-history"><div style="font-size:32px;margin-bottom:8px">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
+  var keys = Object.keys(allData).sort().reverse();
+  var list = document.getElementById('history-list');
+  list.innerHTML='';
+  if (!keys.length) {
+    list.innerHTML='<div class="no-history"><div style="font-size:32px;margin-bottom:8px">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
     return;
   }
-  keys.forEach(k => {
-    const [y,m] = k.split("-").map(Number);
-    const entry  = allData[k] || {};
-    const balance = monthBalance(entry);
-    const card = document.createElement("div");
-    card.className = "hist-card";
-    const tags = [
-      ...CATEGORIES.filter(c => entry[c.key]).map(c =>
-        `<span class="hist-tag" style="background:${c.color}18;color:${c.color}">${c.icon} ${c.label}: ₪${entry[c.key].toLocaleString()}</span>`
-      ),
-      ...getMiscItems(entry).map(i =>
-        `<span class="hist-tag" style="background:${MISC_COLOR}18;color:${MISC_COLOR}">📦 ${i.note ? escapeHtml(i.note) : "שונות"}: ₪${i.amount.toLocaleString()}</span>`
-      )
-    ].join("");
-    card.innerHTML = `
-      <div class="hist-card-top">
-        <span class="hist-month">${MONTHS_HE[m-1]} ${y}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="hist-balance" style="color:${balance>=0?'#276749':'#E53E3E'}">${balance>=0?"+":""}₪${balance.toLocaleString()}</span>
-          <button class="hist-del-btn" onclick="deleteMonth('${k}')" aria-label="מחיקת ${MONTHS_HE[m-1]} ${y}">✕</button>
-        </div>
-      </div>
-      <div class="hist-tags">${tags}</div>`;
+  keys.forEach(function(k){
+    var parts = k.split('-').map(Number);
+    var y=parts[0], m=parts[1];
+    var entry=allData[k]||{};
+    var balance=monthBalance(entry);
+    var card=document.createElement('div');
+    card.className='hist-card';
+    var tags = CATEGORIES.filter(function(c){ return entry[c.key]; }).map(function(c){
+      return '<span class="hist-tag" style="background:'+c.color+'18;color:'+c.color+'">'+c.icon+' '+c.label+': ₪'+entry[c.key].toLocaleString()+'</span>';
+    }).concat(getMiscItems(entry).map(function(i){
+      return '<span class="hist-tag" style="background:'+MISC_COLOR+'18;color:'+MISC_COLOR+'">📦 '+(i.note?escHtml(i.note):'שונות')+': ₪'+i.amount.toLocaleString()+'</span>';
+    })).join('');
+    card.innerHTML=
+      '<div class="hist-card-top">'+
+        '<span class="hist-month">'+MONTHS_HE[m-1]+' '+y+'</span>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
+          '<button class="hist-del-btn" onclick="deleteMonth(\''+k+'\')"'>✕</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="hist-tags">'+tags+'</div>';
     list.appendChild(card);
   });
 }
 
-window.deleteMonth = async function(key) {
-  if (!confirm("למחוק את הנתונים של החודש הזה?")) return;
+async function deleteMonth(key) {
+  if (!confirm('למחוק את הנתונים של החודש הזה?')) return;
   try {
-    await deleteDoc(doc(db, "months", key));
+    await db.collection('months').doc(key).delete();
     delete allData[key];
     renderHistory();
-    if (monthKey(activeYear, activeMonth) === key) renderEntry();
-    showToast("✓ החודש נמחק");
-  } catch(e) { showToast("❌ שגיאה במחיקה"); }
+    if (monthKey(activeYear,activeMonth)===key) renderEntry();
+    showToast('✓ החודש נמחק');
+  } catch(e) { showToast('❌ שגיאה במחיקה'); }
 }
 
-window.exportCsv = function() {
-  const rows = [["חודש", "הכנסה (שכירות)", ...CATEGORIES.filter(c => c.key !== "rent").map(c => c.label), "שונות", "פירוט שונות", "יתרה"]];
-  Object.keys(allData).sort().forEach(k => {
-    const entry = allData[k];
-    const miscItems = getMiscItems(entry);
-    const miscTotal = getMiscTotal(entry);
-    const miscNotes = miscItems.map(i => i.note || "שונות").join(" | ");
-    rows.push([k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), miscTotal, miscNotes, monthBalance(entry)]);
+function exportCsv() {
+  var rows = [['חודש','הכנסה (שכירות)'].concat(CATEGORIES.filter(function(c){return c.key!=='rent';}).map(function(c){return c.label;})).concat(['שונות','פירוט שונות','יתרה'])];
+  Object.keys(allData).sort().forEach(function(k){
+    var e=allData[k];
+    var mi=getMiscItems(e);
+    rows.push([k,e.rent||0].concat(CATEGORIES.filter(function(c){return c.key!=='rent';}).map(function(c){return e[c.key]||0;})).concat([getMiscTotal(e),mi.map(function(i){return i.note||'שונות';}).join(' | '),monthBalance(e)]));
   });
   rows.push([]);
-  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סהִִכ"]);
-  allDist.forEach(d => rows.push([d.date, d.yossi, d.shrolik, d.yossi + d.shrolik]));
-  const csv = "﻿" + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "ניהול-נכס.csv"; a.click();
+  rows.push(['תאריך חלוקה','יוסי','שרוליק','סהכ']);
+  allDist.forEach(function(d){ rows.push([d.date,d.yossi,d.shrolik,d.yossi+d.shrolik]); });
+  var csv='﻿'+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='ניהול-נכס.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 
-// SWIPE — RTL: swipe left = history, swipe right = entry
-(function() {
-  let startX = 0, startY = 0;
-  document.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-  }, { passive: true });
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
-    const idx = VIEW_ORDER.indexOf(currentView);
-    if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
-    else if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
-  }, { passive: true });
+// החלקה — RTL: שמאלה=היסטוריה, ימינה=הזנה
+(function(){
+  var startX=0, startY=0;
+  document.addEventListener('touchstart',function(e){
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-startX;
+    var dy=e.changedTouches[0].clientY-startY;
+    if (Math.abs(dx)<50 || Math.abs(dx)<Math.abs(dy)) return;
+    var idx=VIEW_ORDER.indexOf(currentView);
+    if (dx<0 && idx<VIEW_ORDER.length-1) navigateToView(VIEW_ORDER[idx+1]);
+    else if (dx>0 && idx>0) navigateToView(VIEW_ORDER[idx-1]);
+  },{passive:true});
 })();
 
-document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
-loadAllData().then(() => { renderSummary(); });
+document.getElementById('cat-list').innerHTML='<div class="loading">⏳ טוען נתונים...</div>';
+loadAllData().then(function(){ renderSummary(); });
 </script>
+
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(async regs => {
-      for (const reg of regs) {
-        const url = (reg.active || reg.installing || reg.waiting || {}).scriptURL || '';
-        if (!url.endsWith('sw2.js')) {
-          await reg.unregister();
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        }
-      }
-      navigator.serviceWorker.register('./sw2.js');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(reg){
+      var url=((reg.active||reg.installing||reg.waiting)||{}).scriptURL||'';
+      if (!url.endsWith('sw2.js')) reg.unregister();
     });
-  }
+    navigator.serviceWorker.register('./sw2.js');
+  });
+}
 </script>
 </body>
 </html>
