@@ -166,14 +166,14 @@
       <button class="export-btn" onclick="exportCsv()" aria-label="ייצוא נתונים לקובץ CSV">⬇ ייצוא CSV</button>
     </div>
     <div id="history-list"></div>
-  </div>
+</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDdzHw1Z3ZWOmQQCTIFoiUGeuajwa0cSZI",
@@ -206,7 +206,7 @@ let activeMonth = new Date().getMonth();
 let allData = {};
 let allDist = [];
 let currentView = 'summary';
-const VIEW_ORDER = ['history', 'summary', 'entry'];
+const VIEW_ORDER = ['entry', 'summary', 'history'];
 const VIEW_BTN_IDX = { entry: 0, summary: 1, history: 2 };
 
 function navigateToView(v) {
@@ -239,12 +239,18 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-// ---- FIREBASE ----
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+  ]);
+}
+
 async function loadAllData() {
   try {
-    const snap = await getDocs(collection(db, "months"));
+    const snap = await withTimeout(getDocs(collection(db, "months")), 10000);
     snap.forEach(d => { allData[d.id] = d.data(); });
-    const dsnap = await getDocs(collection(db, "distributions"));
+    const dsnap = await withTimeout(getDocs(collection(db, "distributions")), 10000);
     allDist = [];
     dsnap.forEach(d => { allDist.push({ id: d.id, ...d.data() }); });
     allDist.sort((a,b) => a.date.localeCompare(b.date));
@@ -252,8 +258,9 @@ async function loadAllData() {
     return true;
   } catch(e) {
     console.error(e);
+    const msg = e.message === 'timeout' ? 'התחברות לשרת לקחה זמן רב' : (e.code || e.message || String(e));
     document.getElementById("cash-amount").textContent = "❌";
-    document.getElementById("cash-sub").textContent = e.code || e.message || String(e);
+    document.getElementById("cash-sub").textContent = msg;
     return false;
   }
 }
@@ -318,7 +325,6 @@ async function seedHistoricalData() {
   }
 }
 
-// ---- VIEWS ----
 window.switchView = function(v, btn) {
   currentView = v;
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
@@ -331,18 +337,14 @@ window.switchView = function(v, btn) {
   if (v === "history") renderHistory();
 }
 
-// ---- ENTRY ----
 function renderEntry() {
   const key   = monthKey(activeYear, activeMonth);
   const entry = allData[key] || {};
   const saved = !!allData[key];
-
   document.getElementById("month-label").textContent = MONTHS_HE[activeMonth] + " " + activeYear;
   document.getElementById("saved-badge").textContent = saved ? "✓ נשמר" : "";
-
   const list = document.getElementById("cat-list");
   list.innerHTML = "";
-
   CATEGORIES.forEach(cat => {
     const val = entry[cat.key] !== undefined ? entry[cat.key] : (saved ? "" : (cat.default !== undefined ? cat.default : ""));
     const card = document.createElement("div");
@@ -362,8 +364,6 @@ function renderEntry() {
       </div>`;
     list.appendChild(card);
   });
-
-  // misc section
   const miscSection = document.createElement("div");
   miscSection.className = "cat-card misc-section";
   miscSection.innerHTML = `
@@ -375,19 +375,15 @@ function renderEntry() {
     <div id="misc-rows"></div>
     <button class="misc-add-btn" onclick="addMiscItemRow('','')">+ הוסף שונות</button>`;
   list.appendChild(miscSection);
-
   getMiscItems(entry).forEach(item => addMiscItemRow(item.note, item.amount));
   updateMiscTotal();
-
   updateMonthlySummary();
   const btn = document.getElementById("save-btn");
   btn.classList.remove("saved");
   btn.textContent = "שמור חודש";
   btn.disabled = false;
-
   const now = new Date();
-  document.getElementById("today-btn").disabled =
-    (activeYear === now.getFullYear() && activeMonth === now.getMonth());
+  document.getElementById("today-btn").disabled = (activeYear === now.getFullYear() && activeMonth === now.getMonth());
 }
 
 window.updateMonthlySummary = function() {
@@ -483,7 +479,6 @@ window.saveMonth = async function() {
   }
 }
 
-// ---- SUMMARY ----
 function monthBalance(entry) {
   const income      = entry.rent || 0;
   const catExpenses = CATEGORIES.filter(c => c.key !== "rent").reduce((s,c) => s + (entry[c.key]||0), 0);
@@ -493,16 +488,13 @@ function monthBalance(entry) {
 function renderSummary() {
   const dateInput = document.getElementById("dist-date");
   if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
-
   const totalProfit = Object.values(allData).reduce((s,e) => s + monthBalance(e), 0);
   const totalDist   = allDist.reduce((s,d) => s + d.yossi + d.shrolik, 0);
   const cash        = totalProfit - totalDist;
-
   document.getElementById("cash-amount").textContent  = "₪" + cash.toLocaleString();
   document.getElementById("cash-sub").textContent     = "מתוך " + Object.keys(allData).length + " חודשים מוזנים";
   document.getElementById("total-profit").textContent = "₪" + totalProfit.toLocaleString();
   document.getElementById("total-dist").textContent   = "₪" + totalDist.toLocaleString();
-
   const list = document.getElementById("dist-list");
   list.innerHTML = "";
   if (allDist.length === 0) { list.innerHTML = '<div class="empty-msg">אין חלוקות עדיין</div>'; return; }
@@ -549,7 +541,6 @@ window.removeDistribution = async function(id) {
   } catch(e) { showToast("❌ שגיאה במחיקה"); }
 }
 
-// ---- HISTORY ----
 function renderHistory() {
   const keys = Object.keys(allData).sort().reverse();
   const list = document.getElementById("history-list");
@@ -596,7 +587,6 @@ window.deleteMonth = async function(key) {
   } catch(e) { showToast("❌ שגיאה במחיקה"); }
 }
 
-// ---- EXPORT ----
 window.exportCsv = function() {
   const rows = [["חודש", "הכנסה (שכירות)", ...CATEGORIES.filter(c => c.key !== "rent").map(c => c.label), "שונות", "פירוט שונות", "יתרה"]];
   Object.keys(allData).sort().forEach(k => {
@@ -604,24 +594,20 @@ window.exportCsv = function() {
     const miscItems = getMiscItems(entry);
     const miscTotal = getMiscTotal(entry);
     const miscNotes = miscItems.map(i => i.note || "שונות").join(" | ");
-    const row = [k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), miscTotal, miscNotes, monthBalance(entry)];
-    rows.push(row);
+    rows.push([k, entry.rent || 0, ...CATEGORIES.filter(c => c.key !== "rent").map(c => entry[c.key] || 0), miscTotal, miscNotes, monthBalance(entry)]);
   });
   rows.push([]);
-  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סה״כ"]);
+  rows.push(["תאריך חלוקה", "יוסי", "שרוליק", "סהִִכ"]);
   allDist.forEach(d => rows.push([d.date, d.yossi, d.shrolik, d.yossi + d.shrolik]));
-
   const csv = "﻿" + rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = "ניהול-נכס.csv";
-  a.click();
+  a.href = url; a.download = "ניהול-נכס.csv"; a.click();
   URL.revokeObjectURL(url);
 }
 
-// ---- SWIPE ----
+// SWIPE — RTL: swipe left=history, swipe right=entry
 (function() {
   let startX = 0, startY = 0;
   document.addEventListener('touchstart', e => {
@@ -631,14 +617,13 @@ window.exportCsv = function() {
   document.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy)) return;
     const idx = VIEW_ORDER.indexOf(currentView);
-    if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
-    else if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
+    if (dx < 0 && idx < VIEW_ORDER.length - 1) navigateToView(VIEW_ORDER[idx + 1]);
+    else if (dx > 0 && idx > 0) navigateToView(VIEW_ORDER[idx - 1]);
   }, { passive: true });
 })();
 
-// ---- INIT ----
 document.getElementById("cat-list").innerHTML = '<div class="loading">⏳ טוען נתונים...</div>';
 loadAllData().then(ok => {
   if (ok) {
@@ -653,7 +638,6 @@ loadAllData().then(ok => {
     document.querySelector(".cashbox").appendChild(retryBtn);
   }
 });
-
 </script>
 <script>
   if ('serviceWorker' in navigator) {
