@@ -409,8 +409,8 @@ function renderEntry() {
         '<div class="cat-label">'+cat.label+'</div>'+
         '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
           ' data-key="'+cat.key+'"'+
-          ` onfocus="this.style.borderColor='${cat.color}'"` +
-          ` onblur="this.style.borderColor='#E2E8F0'"` +
+          ' onfocus="this.style.borderColor=\''+cat.color+'\'"'+
+          ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
           ' oninput="updateMonthlySummary()">'+
       '</div>'+
       '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+
@@ -427,7 +427,7 @@ function renderEntry() {
       '<div style="font-size:14px;font-weight:700;color:'+MISC_COLOR+'" id="misc-total"></div>'+
     '</div>'+
     '<div id="misc-rows"></div>'+
-    `<button class="misc-add-btn" onclick="addMiscRow('','')">+ הוסף שונות</button>`;
+    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\')">+ הוסף שונות</button>';
   list.appendChild(miscSec);
   getMiscItems(entry).forEach(function(item){ addMiscRow(item.note, item.amount); });
   updateMiscTotal();
@@ -479,10 +479,19 @@ function goToToday() {
 function addMiscRow(note, amount) {
   var row = document.createElement('div');
   row.className = 'misc-row';
+  var mc = MISC_COLOR;
+  var noteVal = escHtml(String(note||''));
+  var amtVal = amount || '';
   row.innerHTML =
-    `<input type="text" class="misc-row-note" placeholder="פירוט" value="${escHtml(String(note||''))}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="scheduleDraftSave()">`+
-    `<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount||\'\'}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="updateMiscTotal();updateMonthlySummary()">`+
-    `<button class="misc-row-del" onclick="this.closest('.misc-row').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>`;
+    '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+noteVal+'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
+    ' oninput="scheduleDraftSave()">'+
+    '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+amtVal+'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
+    ' oninput="updateMiscTotal();updateMonthlySummary()">'+
+    '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>';
   document.getElementById('misc-rows').appendChild(row);
   updateMiscTotal();
   updateMonthlySummary();
@@ -552,7 +561,7 @@ function renderSummary() {
       '</div>'+
       '<div style="display:flex;align-items:center">'+
         '<span class="dist-total">₪'+(d.yossi+d.shrolik).toLocaleString()+'</span>'+
-        `<button class="del-btn" onclick="removeDistribution('${d.id}')">✕</button>`+
+        '<button class="del-btn" onclick="removeDistribution(\''+d.id+'\')" >✕</button>'+
       '</div>';
     list.appendChild(row);
   });
@@ -653,7 +662,7 @@ function renderHistory() {
           '<span class="hist-month">'+curBadge+MONTHS_HE[m-1]+' '+y+'</span>'+
           '<div style="display:flex;align-items:center;gap:8px">'+
             '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
-            `<button class="hist-del-btn" onclick="deleteMonth('${k}')">✕</button>`+
+            '<button class="hist-del-btn" onclick="deleteMonth(\''+k+'\')" >✕</button>'+
           '</div>'+
         '</div>'+
         '<div class="hist-tags">'+tags+'</div>';
@@ -742,7 +751,6 @@ function restoreDraft(key) {
   } catch(e) {}
 }
 
-// החלקה — RTL: שמאלה=היסטוריה, ימינה=הזנה
 (function(){
   var startX=0, startY=0;
   document.addEventListener('touchstart',function(e){
