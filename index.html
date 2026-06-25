@@ -23,7 +23,23 @@
   .tab-btn.active { background: #4A90D9; color: #fff; }
   .main { max-width: 700px; margin: 0 auto; padding: 20px 16px; }
   .view { display: none; }
-  .view.active { display: block; }
+  .view.active { display: block; animation: viewFadeIn 0.2s ease; }
+  @keyframes viewFadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+  .swipe-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+  .swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: all 0.25s; }
+  .swipe-dot.active { background: #fff; width: 18px; border-radius: 3px; }
+  .offline-banner { background: #FFF3CD; color: #856404; border-bottom: 1px solid #FFECB5; padding: 8px 16px; text-align: center; font-size: 13px; font-weight: 600; display: none; }
+  .offline-banner.show { display: block; }
+  .save-btn-sticky { position: sticky; bottom: 16px; }
+  .draft-badge { font-size: 11px; color: #E67E22; font-weight: 600; text-align: center; min-height: 16px; margin-top: 8px; }
+  .chart-wrap { background: #fff; border-radius: 14px; padding: 16px 16px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; }
+  .chart-title { font-size: 13px; font-weight: 700; color: #4A5568; margin-bottom: 8px; }
+  .chart-svg { width: 100%; display: block; }
+  .year-header { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid #E2E8F0; }
+  .year-label { font-size: 15px; font-weight: 800; color: #1A365D; }
+  .year-total { font-size: 13px; font-weight: 700; }
+  .hist-card.current-month { border: 2px solid #4A90D9; }
+  .current-month-badge { display: inline-block; font-size: 10px; background: #4A90D9; color: #fff; border-radius: 4px; padding: 1px 5px; margin-right: 6px; vertical-align: middle; font-weight: 600; }
   .month-nav { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 14px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; }
   .nav-btn { background: #EBF4FF; border: none; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 20px; color: #2D5A8E; display: flex; align-items: center; justify-content: center; }
   .month-label { font-size: 20px; font-weight: 700; color: #1A365D; text-align: center; }
@@ -101,8 +117,14 @@
       <button class="tab-btn" role="tab" onclick="switchView('entry',this)">הזנת חודש</button>
       <button class="tab-btn" role="tab" onclick="switchView('history',this)">היסטוריה</button>
     </div>
+    <div class="swipe-dots" id="swipe-dots">
+      <div class="swipe-dot active"></div>
+      <div class="swipe-dot"></div>
+      <div class="swipe-dot"></div>
+    </div>
   </div>
 </div>
+<div class="offline-banner" id="offline-banner">📴 מצב לא מקוון — נתונים מקומיים</div>
 
 <div class="main">
   <div id="view-entry" class="view">
@@ -124,7 +146,10 @@
         <span class="balance-amount" id="sum-balance">₪0</span>
       </div>
     </div>
-    <button class="save-btn" id="save-btn" onclick="saveMonth()">שמור חודש</button>
+    <div class="draft-badge" id="draft-badge"></div>
+    <div class="save-btn-sticky">
+      <button class="save-btn" id="save-btn" onclick="saveMonth()">שמור חודש</button>
+    </div>
   </div>
 
   <div id="view-summary" class="view active">
@@ -162,6 +187,10 @@
     <div class="history-title-row">
       <div class="history-title">היסטוריית חודשים</div>
       <button class="export-btn" onclick="exportCsv()">⬇ ייצוא CSV</button>
+    </div>
+    <div class="chart-wrap" id="chart-wrap" style="display:none">
+      <div class="chart-title">📈 יתרה חודשית לאורך זמן</div>
+      <svg class="chart-svg" id="chart-svg" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
     </div>
     <div id="history-list"></div>
   </div>
@@ -309,6 +338,8 @@ function useFallback() {
   allData = Object.assign({}, HIST_MONTHS);
   allDist = HIST_DISTS.map(function(d){ return Object.assign({},d); });
   allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.add('show');
 }
 
 async function loadAllData() {
@@ -321,6 +352,8 @@ async function loadAllData() {
     dsnap.forEach(function(d){ allDist.push(Object.assign({id:d.id}, d.data())); });
     allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
     if (Object.keys(allData).length === 0) await seedData();
+    var banner = document.getElementById('offline-banner');
+    if (banner) banner.classList.remove('show');
   } catch(e) {
     console.error('Firebase:', e);
     useFallback();
@@ -345,9 +378,17 @@ function switchView(v, btn) {
   document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
   document.getElementById('view-'+v).classList.add('active');
   btn.classList.add('active');
+  updateDots(v);
   if (v==='entry') renderEntry();
   if (v==='summary') renderSummary();
   if (v==='history') renderHistory();
+}
+
+function updateDots(v) {
+  var idx = VIEW_ORDER.indexOf(v);
+  document.querySelectorAll('.swipe-dot').forEach(function(dot, i){
+    dot.classList.toggle('active', i === idx);
+  });
 }
 
 function renderEntry() {
@@ -397,6 +438,9 @@ function renderEntry() {
   btn.disabled = false;
   var now = new Date();
   document.getElementById('today-btn').disabled = (activeYear===now.getFullYear()&&activeMonth===now.getMonth());
+  var badge = document.getElementById('draft-badge');
+  if (badge) badge.textContent = '';
+  if (!saved) restoreDraft(key);
 }
 
 function updateMonthlySummary() {
@@ -416,6 +460,7 @@ function updateMonthlySummary() {
   var balEl = document.getElementById('sum-balance');
   balEl.textContent = (bal>=0?'+':'')+'₪'+bal.toLocaleString();
   balEl.style.color = bal>=0?'#68D391':'#FEB2B2';
+  scheduleDraftSave();
 }
 
 function changeMonth(dir) {
@@ -435,9 +480,9 @@ function addMiscRow(note, amount) {
   var row = document.createElement('div');
   row.className = 'misc-row';
   row.innerHTML =
-    `<input type="text" class="misc-row-note" placeholder="פירוט" value="${escHtml(String(note||''))}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'">`+
-    `<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount||''}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="updateMiscTotal();updateMonthlySummary()">`+
-    `<button class="misc-row-del" onclick="this.closest('.misc-row').remove();updateMiscTotal();updateMonthlySummary()">✕</button>`;
+    `<input type="text" class="misc-row-note" placeholder="פירוט" value="${escHtml(String(note||''))}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="scheduleDraftSave()">`+
+    `<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="${amount||\'\'}" onfocus="this.style.borderColor='${MISC_COLOR}'" onblur="this.style.borderColor='#E2E8F0'" oninput="updateMiscTotal();updateMonthlySummary()">`+
+    `<button class="misc-row-del" onclick="this.closest('.misc-row').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>`;
   document.getElementById('misc-rows').appendChild(row);
   updateMiscTotal();
   updateMonthlySummary();
@@ -470,6 +515,9 @@ async function saveMonth() {
   try {
     await db.collection('months').doc(key).set(entry);
     allData[key]=entry;
+    localStorage.removeItem('draft_'+key);
+    var draftBadge = document.getElementById('draft-badge');
+    if (draftBadge) draftBadge.textContent = '';
     document.getElementById('saved-badge').textContent='✓ נשמר';
     btn.classList.add('saved'); btn.textContent='✓ נשמר בהצלחה!';
     showToast('✓ החודש נשמר בענן');
@@ -537,7 +585,30 @@ async function removeDistribution(id) {
   } catch(e) { showToast('❌ שגיאה במחיקה'); }
 }
 
+function renderChart() {
+  var chartWrap = document.getElementById('chart-wrap');
+  var svg = document.getElementById('chart-svg');
+  var keys = Object.keys(allData).sort();
+  if (keys.length < 2) { chartWrap.style.display='none'; return; }
+  chartWrap.style.display='block';
+  var balances = keys.map(function(k){ return monthBalance(allData[k]); });
+  var min = Math.min.apply(null, balances);
+  var max = Math.max.apply(null, balances);
+  var range = max - min || 1;
+  var W=300, H=90, PAD=8;
+  var pts = balances.map(function(b, i){
+    var x = PAD + (i / (keys.length-1)) * (W - 2*PAD);
+    var y = H - PAD - ((b - min) / range) * (H - 2*PAD);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  var ptsStr = pts.join(' ');
+  svg.innerHTML =
+    '<polygon fill="rgba(74,144,217,0.12)" stroke="none" points="'+PAD+','+H+' '+ptsStr+' '+(W-PAD)+','+H+'"/>'+
+    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'"/>';
+}
+
 function renderHistory() {
+  renderChart();
   var keys = Object.keys(allData).sort().reverse();
   var list = document.getElementById('history-list');
   list.innerHTML='';
@@ -545,28 +616,49 @@ function renderHistory() {
     list.innerHTML='<div class="no-history"><div style="font-size:32px;margin-bottom:8px">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
     return;
   }
+  var now = new Date();
+  var curKey = monthKey(now.getFullYear(), now.getMonth());
+  var byYear = {};
   keys.forEach(function(k){
-    var parts = k.split('-').map(Number);
-    var y=parts[0], m=parts[1];
-    var entry=allData[k]||{};
-    var balance=monthBalance(entry);
-    var card=document.createElement('div');
-    card.className='hist-card';
-    var tags = CATEGORIES.filter(function(c){ return entry[c.key]; }).map(function(c){
-      return '<span class="hist-tag" style="background:'+c.color+'18;color:'+c.color+'">'+c.icon+' '+c.label+': ₪'+entry[c.key].toLocaleString()+'</span>';
-    }).concat(getMiscItems(entry).map(function(i){
-      return '<span class="hist-tag" style="background:'+MISC_COLOR+'18;color:'+MISC_COLOR+'">📦 '+(i.note?escHtml(i.note):'שונות')+': ₪'+i.amount.toLocaleString()+'</span>';
-    })).join('');
-    card.innerHTML=
-      '<div class="hist-card-top">'+
-        '<span class="hist-month">'+MONTHS_HE[m-1]+' '+y+'</span>'+
-        '<div style="display:flex;align-items:center;gap:8px">'+
-          '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
-          `<button class="hist-del-btn" onclick="deleteMonth('${k}')">✕</button>`+
+    var yr = k.split('-')[0];
+    if (!byYear[yr]) byYear[yr] = [];
+    byYear[yr].push(k);
+  });
+  var years = Object.keys(byYear).sort().reverse();
+  years.forEach(function(yr){
+    var yearKeys = byYear[yr];
+    var yearBal = yearKeys.reduce(function(s,k){ return s+monthBalance(allData[k]||{}); }, 0);
+    var yh = document.createElement('div');
+    yh.className = 'year-header';
+    yh.innerHTML =
+      '<span class="year-label">'+yr+'</span>'+
+      '<span class="year-total" style="color:'+(yearBal>=0?'#276749':'#E53E3E')+'">'+(yearBal>=0?'+':'')+'₪'+yearBal.toLocaleString()+'</span>';
+    list.appendChild(yh);
+    yearKeys.forEach(function(k){
+      var parts = k.split('-').map(Number);
+      var y=parts[0], m=parts[1];
+      var entry=allData[k]||{};
+      var balance=monthBalance(entry);
+      var isCur = k===curKey;
+      var card=document.createElement('div');
+      card.className='hist-card'+(isCur?' current-month':'');
+      var tags = CATEGORIES.filter(function(c){ return entry[c.key]; }).map(function(c){
+        return '<span class="hist-tag" style="background:'+c.color+'18;color:'+c.color+'">'+c.icon+' '+c.label+': ₪'+entry[c.key].toLocaleString()+'</span>';
+      }).concat(getMiscItems(entry).map(function(i){
+        return '<span class="hist-tag" style="background:'+MISC_COLOR+'18;color:'+MISC_COLOR+'">📦 '+(i.note?escHtml(i.note):'שונות')+': ₪'+i.amount.toLocaleString()+'</span>';
+      })).join('');
+      var curBadge = isCur ? '<span class="current-month-badge">חודש נוכחי</span>' : '';
+      card.innerHTML=
+        '<div class="hist-card-top">'+
+          '<span class="hist-month">'+curBadge+MONTHS_HE[m-1]+' '+y+'</span>'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
+            `<button class="hist-del-btn" onclick="deleteMonth('${k}')">✕</button>`+
+          '</div>'+
         '</div>'+
-      '</div>'+
-      '<div class="hist-tags">'+tags+'</div>';
-    list.appendChild(card);
+        '<div class="hist-tags">'+tags+'</div>';
+      list.appendChild(card);
+    });
   });
 }
 
@@ -597,6 +689,57 @@ function exportCsv() {
   var a=document.createElement('a');
   a.href=url; a.download='ניהול-נכס.csv'; a.click();
   URL.revokeObjectURL(url);
+}
+
+var _draftTimer = null;
+function scheduleDraftSave() {
+  if (currentView !== 'entry') return;
+  var key = monthKey(activeYear, activeMonth);
+  if (allData[key]) return;
+  clearTimeout(_draftTimer);
+  var badge = document.getElementById('draft-badge');
+  if (badge) badge.textContent = '✏️ שומר טיוטה...';
+  _draftTimer = setTimeout(saveDraft, 800);
+}
+
+function saveDraft() {
+  var key = monthKey(activeYear, activeMonth);
+  if (allData[key]) return;
+  var draft = {};
+  CATEGORIES.forEach(function(cat){
+    var inp = document.querySelector('[data-key="'+cat.key+'"]');
+    if (inp && inp.value !== '') draft[cat.key] = inp.value;
+  });
+  var miscItems = [];
+  document.querySelectorAll('.misc-row').forEach(function(row){
+    var amt = row.querySelector('.misc-row-amount').value;
+    var note = row.querySelector('.misc-row-note').value.trim();
+    if (amt) miscItems.push({note:note, amount:parseFloat(amt)});
+  });
+  if (miscItems.length) draft.miscItems = miscItems;
+  try {
+    localStorage.setItem('draft_'+key, JSON.stringify(draft));
+    var badge = document.getElementById('draft-badge');
+    if (badge) badge.textContent = '✏️ טיוטה שמורה';
+  } catch(e) {}
+}
+
+function restoreDraft(key) {
+  try {
+    var raw = localStorage.getItem('draft_'+key);
+    if (!raw) return;
+    var draft = JSON.parse(raw);
+    CATEGORIES.forEach(function(cat){
+      var inp = document.querySelector('[data-key="'+cat.key+'"]');
+      if (inp && draft[cat.key] !== undefined) inp.value = draft[cat.key];
+    });
+    document.getElementById('misc-rows').innerHTML = '';
+    (draft.miscItems||[]).forEach(function(i){ addMiscRow(i.note, i.amount); });
+    updateMiscTotal();
+    updateMonthlySummary();
+    var badge = document.getElementById('draft-badge');
+    if (badge) badge.textContent = '✏️ שוחזרה טיוטה';
+  } catch(e) {}
 }
 
 // החלקה — RTL: שמאלה=היסטוריה, ימינה=הזנה
