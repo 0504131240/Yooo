@@ -94,7 +94,8 @@
   .history-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
   .export-btn { background: #EBF4FF; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #2D5A8E; cursor: pointer; font-family: inherit; }
   .hist-del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; }
-  .hist-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+  .hist-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+  .hist-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.11); }
   .hist-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
   .hist-month { font-size: 15px; font-weight: 700; color: #1A365D; }
   .hist-balance { font-size: 16px; font-weight: 800; }
@@ -409,7 +410,7 @@ function renderEntry() {
         '<div class="cat-label">'+cat.label+'</div>'+
         '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
           ' data-key="'+cat.key+'"'+
-          ' onfocus="this.style.borderColor=\''+cat.color+'\'"'+
+          ' onfocus="this.style.borderColor=\''+cat.color+'\' "'+
           ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
           ' oninput="updateMonthlySummary()">'+
       '</div>'+
@@ -427,7 +428,7 @@ function renderEntry() {
       '<div style="font-size:14px;font-weight:700;color:'+MISC_COLOR+'" id="misc-total"></div>'+
     '</div>'+
     '<div id="misc-rows"></div>'+
-    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\')">+ הוסף שונות</button>';
+    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\');">+ הוסף שונות</button>';
   list.appendChild(miscSec);
   getMiscItems(entry).forEach(function(item){ addMiscRow(item.note, item.amount); });
   updateMiscTotal();
@@ -484,11 +485,11 @@ function addMiscRow(note, amount) {
   var amtVal = amount || '';
   row.innerHTML =
     '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+noteVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\' "'+
     ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="scheduleDraftSave()">'+
     '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+amtVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\' "'+
     ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="updateMiscTotal();updateMonthlySummary()">'+
     '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>';
@@ -613,7 +614,7 @@ function renderChart() {
   var ptsStr = pts.join(' ');
   svg.innerHTML =
     '<polygon fill="rgba(74,144,217,0.12)" stroke="none" points="'+PAD+','+H+' '+ptsStr+' '+(W-PAD)+','+H+'"/>'+
-    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'"/>';
+    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'" />';
 }
 
 function renderHistory() {
@@ -662,10 +663,11 @@ function renderHistory() {
           '<span class="hist-month">'+curBadge+MONTHS_HE[m-1]+' '+y+'</span>'+
           '<div style="display:flex;align-items:center;gap:8px">'+
             '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
-            '<button class="hist-del-btn" onclick="deleteMonth(\''+k+'\')" >✕</button>'+
+            '<button class="hist-del-btn" onclick="event.stopPropagation();deleteMonth(\''+k+'\')" >✕</button>'+
           '</div>'+
         '</div>'+
         '<div class="hist-tags">'+tags+'</div>';
+      (function(yr, mn){ card.addEventListener('click', function(){ activeYear=yr; activeMonth=mn-1; navigateToView('entry'); }); })(y, m);
       list.appendChild(card);
     });
   });
