@@ -1,796 +1,1315 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="icon.svg">
-<link rel="apple-touch-icon" href="icon.svg">
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="זבוטינצקי 9">
-<meta name="theme-color" content="#1A365D">
-<title>זבוטינצקי 9</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #1A202C; min-height: 100vh; }
-  .header { background: linear-gradient(135deg, #1A365D 0%, #2D5A8E 100%); padding: 20px 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-  .header-inner { max-width: 700px; margin: 0 auto; }
-  .header h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  .header p { font-size: 13px; color: #A0C4FF; margin-bottom: 16px; }
-  .tabs { display: flex; gap: 8px; }
-  .tab-btn { padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.15); color: #CBD5E0; transition: all 0.2s; font-family: inherit; }
-  .tab-btn.active { background: #4A90D9; color: #fff; }
-  .main { max-width: 700px; margin: 0 auto; padding: 20px 16px; }
-  .view { display: none; }
-  .view.active { display: block; animation: viewFadeIn 0.2s ease; }
-  @keyframes viewFadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
-  .swipe-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-  .swipe-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: all 0.25s; }
-  .swipe-dot.active { background: #fff; width: 18px; border-radius: 3px; }
-  .offline-banner { background: #FFF3CD; color: #856404; border-bottom: 1px solid #FFECB5; padding: 8px 16px; text-align: center; font-size: 13px; font-weight: 600; display: none; }
-  .offline-banner.show { display: block; }
-  .save-btn-sticky { position: sticky; bottom: 16px; }
-  .draft-badge { font-size: 11px; color: #E67E22; font-weight: 600; text-align: center; min-height: 16px; margin-top: 8px; }
-  .chart-wrap { background: #fff; border-radius: 14px; padding: 16px 16px 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; }
-  .chart-title { font-size: 13px; font-weight: 700; color: #4A5568; margin-bottom: 8px; }
-  .chart-svg { width: 100%; display: block; }
-  .year-header { display: flex; justify-content: space-between; align-items: center; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid #E2E8F0; }
-  .year-label { font-size: 15px; font-weight: 800; color: #1A365D; }
-  .year-total { font-size: 13px; font-weight: 700; }
-  .hist-card.current-month { border: 2px solid #4A90D9; }
-  .current-month-badge { display: inline-block; font-size: 10px; background: #4A90D9; color: #fff; border-radius: 4px; padding: 1px 5px; margin-right: 6px; vertical-align: middle; font-weight: 600; }
-  .month-nav { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 14px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; }
-  .nav-btn { background: #EBF4FF; border: none; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; font-size: 20px; color: #2D5A8E; display: flex; align-items: center; justify-content: center; }
-  .month-label { font-size: 20px; font-weight: 700; color: #1A365D; text-align: center; }
-  .saved-badge { font-size: 12px; color: #48BB78; text-align: center; margin-top: 2px; }
-  .today-btn { display: block; margin: 6px auto 0; background: none; border: none; color: #4A90D9; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 2px 8px; }
-  .today-btn:disabled { color: #CBD5E0; cursor: default; }
-  .cat-card { background: #fff; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-  .cat-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-  .cat-info { flex: 1; }
-  .cat-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 4px; }
-  .cat-input { width: 100%; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 12px; font-size: 15px; outline: none; background: #F7FAFC; text-align: right; font-family: inherit; color: #1A202C; transition: border-color 0.2s; }
-  .cat-value { font-size: 14px; font-weight: 700; min-width: 70px; text-align: left; }
-  .misc-section { flex-direction: column; align-items: stretch; gap: 0; }
-  .misc-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-  .misc-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-  .misc-row-note { flex: 2; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; background: #F7FAFC; color: #1A202C; transition: border-color 0.2s; }
-  .misc-row-amount { flex: 1; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; background: #F7FAFC; color: #1A202C; min-width: 80px; transition: border-color 0.2s; }
-  .misc-row-del { background: #FFF5F5; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #E53E3E; font-size: 12px; flex-shrink: 0; }
-  .misc-add-btn { margin-top: 4px; background: none; border: 1.5px dashed #CBD5E0; border-radius: 8px; padding: 8px; width: 100%; font-size: 13px; color: #95A5A6; cursor: pointer; font-family: inherit; }
-  .month-summary { background: linear-gradient(135deg, #1A365D, #2D5A8E); border-radius: 14px; padding: 20px; margin-top: 16px; color: #fff; }
-  .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-  .summary-row span:first-child { color: #A0C4FF; font-size: 13px; }
-  .summary-row span:last-child { font-weight: 700; }
-  .summary-divider { border-top: 1px solid rgba(255,255,255,0.2); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-  .summary-divider .label { font-weight: 700; font-size: 16px; }
-  .balance-amount { font-weight: 800; font-size: 22px; }
-  .save-btn { width: 100%; margin-top: 16px; padding: 16px; background: #2D5A8E; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: inherit; }
-  .save-btn.saved { background: #48BB78; }
-  .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .cashbox { background: linear-gradient(135deg, #276749, #38A169); border-radius: 18px; padding: 28px; margin-bottom: 20px; color: #fff; text-align: center; box-shadow: 0 8px 24px rgba(39,103,73,0.3); }
-  .cashbox .label { font-size: 14px; color: #9AE6B4; margin-bottom: 6px; }
-  .cashbox .amount { font-size: 44px; font-weight: 800; letter-spacing: -1px; }
-  .cashbox .sub { font-size: 12px; color: #9AE6B4; margin-top: 8px; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  .stat-card { background: #fff; border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .stat-card .stat-label { font-size: 12px; color: #718096; margin-bottom: 4px; }
-  .stat-card .stat-amount { font-size: 24px; font-weight: 800; }
-  .dist-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; }
-  .dist-panel h3 { font-size: 16px; font-weight: 700; color: #1A365D; margin-bottom: 16px; }
-  .dist-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F0F4F8; }
-  .dist-date { font-size: 13px; font-weight: 600; color: #4A5568; }
-  .dist-names { font-size: 12px; color: #718096; }
-  .dist-total { font-size: 14px; font-weight: 700; color: #E53E3E; }
-  .del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; margin-right: 10px; }
-  .add-dist { margin-top: 16px; padding-top: 16px; border-top: 2px dashed #E2E8F0; }
-  .add-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 10px; }
-  .dist-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-  .dist-inputs input { border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; width: 100%; }
-  .add-dist-btn { width: 100%; padding: 10px; background: #2D5A8E; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
-  .empty-msg { color: #A0AEC0; font-size: 13px; text-align: center; padding: 10px 0; }
-  .history-title { font-size: 16px; font-weight: 700; color: #1A365D; }
-  .history-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .export-btn { background: #EBF4FF; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #2D5A8E; cursor: pointer; font-family: inherit; }
-  .hist-del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; }
-  .hist-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
-  .hist-card:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.11); }
-  .hist-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .hist-month { font-size: 15px; font-weight: 700; color: #1A365D; }
-  .hist-balance { font-size: 16px; font-weight: 800; }
-  .hist-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .hist-tag { border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; }
-  .no-history { background: #fff; border-radius: 14px; padding: 40px; text-align: center; color: #A0AEC0; }
-  .loading { text-align: center; padding: 40px; color: #718096; font-size: 14px; }
-  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #2D3748; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול אתר בניה</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #e67e22;
+      --primary-dark: #ca6f1e;
+      --secondary: #2c3e50;
+      --bg: #f5f6fa;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --text-light: #7f8c8d;
+      --border: #e0e0e0;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --shadow: 0 2px 12px rgba(0,0,0,0.10);
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, var(--secondary) 0%, #1a252f 100%);
+      color: #fff;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 64px;
+    }
+    .header-logo {
+      font-size: 26px;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .header-subtitle {
+      font-size: 12px;
+      color: #bdc3c7;
+      margin-top: 1px;
+    }
+
+    /* ===== NAV TABS ===== */
+    nav {
+      background: var(--secondary);
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 4px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: #bdc3c7;
+      padding: 14px 22px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-icon { font-size: 16px; }
+
+    /* ===== MAIN CONTENT ===== */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+    .section-title span {
+      font-size: 24px;
+      margin-left: 8px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary {
+      background: #ecf0f1;
+      color: var(--secondary);
+    }
+    .btn-secondary:hover { background: #dfe6e9; }
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+    /* ===== CALENDAR ===== */
+    .calendar-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .cal-nav-btn {
+      background: none;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      width: 36px; height: 36px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      color: var(--secondary);
+    }
+    .cal-nav-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .cal-month-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--secondary);
+      min-width: 160px;
+      text-align: center;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .cal-day-header {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-light);
+      padding: 6px 0;
+      text-transform: uppercase;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: #f8f9fa;
+      position: relative;
+      min-height: 52px;
+    }
+    .cal-day:hover { border-color: var(--primary); background: #fff8f0; }
+    .cal-day.empty { background: transparent; cursor: default; pointer-events: none; }
+    .cal-day.today {
+      border-color: var(--primary);
+      background: #fff3e0;
+    }
+    .cal-day.has-data {
+      background: #e8f5e9;
+      border-color: var(--success);
+    }
+    .cal-day.has-data:hover { background: #c8e6c9; }
+    .cal-day-num {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+    }
+    .cal-day-workers {
+      font-size: 10px;
+      color: var(--success);
+      font-weight: 700;
+      margin-top: 3px;
+    }
+    .cal-day.future { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+    /* Monthly summary */
+    .monthly-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .stat-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 18px 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .stat-num {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* ===== PROGRESS UPDATES ===== */
+    .add-update-form {
+      display: none;
+    }
+    .add-update-form.open { display: block; }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      direction: rtl;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-textarea { min-height: 100px; resize: vertical; }
+
+    /* Photo upload zone */
+    .photo-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .photo-zone:hover, .photo-zone.drag-over {
+      border-color: var(--primary);
+      background: #fff8f0;
+    }
+    .photo-zone-icon { font-size: 32px; margin-bottom: 8px; }
+    .photo-zone-text { font-size: 13px; color: var(--text-light); }
+    .photo-zone input[type=file] { display: none; }
+
+    .photo-previews {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .photo-preview-item {
+      position: relative;
+      width: 90px;
+      height: 90px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid var(--border);
+    }
+    .photo-preview-item img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .photo-preview-item .remove-photo {
+      position: absolute;
+      top: 3px; left: 3px;
+      background: rgba(231,76,60,0.85);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    /* Update cards */
+    .updates-list { display: flex; flex-direction: column; gap: 20px; }
+    .update-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .update-card-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ecf0f1 100%);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .update-card-date {
+      font-size: 13px;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+    .update-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+    .update-card-body { padding: 16px 20px; }
+    .update-card-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .update-card-photos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .update-photo {
+      width: 100px; height: 100px;
+      border-radius: 8px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      transition: transform 0.15s;
+    }
+    .update-photo:hover { transform: scale(1.04); border-color: var(--primary); }
+    .update-card-footer {
+      padding: 10px 20px;
+      background: #fafafa;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ===== PLANS ===== */
+    .plans-upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+      margin-bottom: 24px;
+    }
+    .plans-upload-zone:hover, .plans-upload-zone.drag-over {
+      border-color: var(--primary);
+      background: #fff8f0;
+    }
+    .plans-upload-icon { font-size: 48px; margin-bottom: 12px; }
+    .plans-upload-text { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .plans-upload-sub { font-size: 13px; color: var(--text-light); }
+    .plans-upload-zone input[type=file] { display: none; }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .plan-item {
+      background: var(--card);
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+    .plan-item:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+    .plan-icon { font-size: 40px; }
+    .plan-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.4;
+    }
+    .plan-size { font-size: 11px; color: var(--text-light); }
+    .plan-date { font-size: 11px; color: var(--text-light); }
+    .plan-actions { display: flex; gap: 6px; }
+    .plan-thumb {
+      width: 100%;
+      height: 110px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: #f5f6fa;
+      border: 1px solid var(--border);
+    }
+
+    .plans-category-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-light);
+      margin: 20px 0 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      direction: rtl;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--secondary);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-light);
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .modal-close:hover { background: #f0f0f0; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer {
+      padding: 14px 24px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Worker counter */
+    .worker-counter {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .counter-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      color: var(--secondary);
+      line-height: 1;
+    }
+    .counter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .counter-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+      min-width: 50px;
+      text-align: center;
+    }
+    .worker-types {
+      margin-top: 16px;
+    }
+    .worker-type-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .worker-type-label {
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+      color: var(--text);
+    }
+    .worker-type-input {
+      width: 70px;
+      padding: 6px 10px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .worker-type-input:focus { outline: none; border-color: var(--primary); }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 95vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px; left: 20px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #2c3e50;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      z-index: 3000;
+      transition: transform 0.3s;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+    .empty-icon { font-size: 52px; margin-bottom: 14px; }
+    .empty-text { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-bar input {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      main { padding: 16px; }
+      .monthly-stats { grid-template-columns: repeat(3, 1fr); }
+      .header-inner { padding: 0 14px; }
+      .nav-inner { padding: 0 4px; }
+      .tab-btn { padding: 12px 12px; font-size: 12px; }
+      .plans-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">
+<header>
   <div class="header-inner">
-    <h1>🏠 זבוטינצקי 9</h1>
-    <p>מעקב הוצאות והכנסות</p>
-    <div class="tabs" role="tablist">
-      <button class="tab-btn active" role="tab" onclick="switchView('summary',this)">קופה וסיכום</button>
-      <button class="tab-btn" role="tab" onclick="switchView('entry',this)">הזנת חודש</button>
-      <button class="tab-btn" role="tab" onclick="switchView('history',this)">היסטוריה</button>
-    </div>
-    <div class="swipe-dots" id="swipe-dots">
-      <div class="swipe-dot active"></div>
-      <div class="swipe-dot"></div>
-      <div class="swipe-dot"></div>
+    <div class="header-logo">🏗️</div>
+    <div>
+      <div class="header-title">ניהול אתר בניה</div>
+      <div class="header-subtitle">מערכת ניהול שוטפת</div>
     </div>
   </div>
-</div>
-<div class="offline-banner" id="offline-banner">📴 מצב לא מקוון — נתונים מקומיים</div>
+</header>
 
-<div class="main">
-  <div id="view-entry" class="view">
-    <div class="month-nav">
-      <button class="nav-btn" onclick="changeMonth(1)">›</button>
-      <div>
-        <div class="month-label" id="month-label"></div>
-        <div class="saved-badge" id="saved-badge"></div>
-        <button class="today-btn" id="today-btn" onclick="goToToday()">↺ חודש נוכחי</button>
-      </div>
-      <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-    </div>
-    <div id="cat-list"></div>
-    <div class="month-summary">
-      <div class="summary-row"><span>הכנסה (שכירות)</span><span id="sum-income">₪0</span></div>
-      <div class="summary-row"><span>סך הוצאות</span><span id="sum-expenses" style="color:#FEB2B2">₪0</span></div>
-      <div class="summary-divider">
-        <span class="label">יתרה חודשית</span>
-        <span class="balance-amount" id="sum-balance">₪0</span>
-      </div>
-    </div>
-    <div class="draft-badge" id="draft-badge"></div>
-    <div class="save-btn-sticky">
-      <button class="save-btn" id="save-btn" onclick="saveMonth()">שמור חודש</button>
-    </div>
+<nav>
+  <div class="nav-inner">
+    <button class="tab-btn active" onclick="showTab('journal')">
+      <span class="tab-icon">📅</span> יומן פועלים
+    </button>
+    <button class="tab-btn" onclick="showTab('progress')">
+      <span class="tab-icon">📊</span> עדכוני התקדמות
+    </button>
+    <button class="tab-btn" onclick="showTab('plans')">
+      <span class="tab-icon">📐</span> תוכניות
+    </button>
   </div>
+</nav>
 
-  <div id="view-summary" class="view active">
-    <div class="cashbox">
-      <div class="label">💰 סה״כ בקופה</div>
-      <div class="amount" id="cash-amount">⏳</div>
-      <div class="sub" id="cash-sub">מתחבר לשרת...</div>
+<main>
+
+  <!-- ===== SECTION 1: JOURNAL ===== -->
+  <div id="section-journal" class="section active">
+    <div class="section-header">
+      <div class="section-title"><span>📅</span> יומן פועלים</div>
     </div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">סה״כ רווחים</div>
-        <div class="stat-amount" id="total-profit" style="color:#2D5A8E">₪0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">סה״כ חולק</div>
-        <div class="stat-amount" id="total-dist" style="color:#E53E3E">₪0</div>
-      </div>
-    </div>
-    <div class="dist-panel">
-      <h3>חלוקות לשותפים</h3>
-      <div id="dist-list"></div>
-      <div class="add-dist">
-        <div class="add-label">+ הוסף חלוקה</div>
-        <div class="dist-inputs">
-          <input type="date" id="dist-date">
-          <input type="number" id="dist-yossi" placeholder="יוסי ₪" min="0">
-          <input type="number" id="dist-shrolik" placeholder="שרוליק ₪" min="0">
+
+    <div class="card">
+      <div class="calendar-controls">
+        <div class="calendar-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8250;</button>
+          <div class="cal-month-label" id="cal-month-label"></div>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">&#8249;</button>
         </div>
-        <button class="add-dist-btn" onclick="addDistribution()">הוסף חלוקה</button>
+        <button class="btn btn-primary" onclick="openDayModal(todayStr())">
+          ✏️ עדכון היום
+        </button>
       </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="monthly-stats" id="monthly-stats"></div>
     </div>
+
+    <!-- Recent journal entries -->
+    <div id="journal-recent"></div>
   </div>
 
-  <div id="view-history" class="view">
-    <div class="history-title-row">
-      <div class="history-title">היסטוריית חודשים</div>
-      <button class="export-btn" onclick="exportCsv()">⬇ ייצוא CSV</button>
+  <!-- ===== SECTION 2: PROGRESS ===== -->
+  <div id="section-progress" class="section">
+    <div class="section-header">
+      <div class="section-title"><span>📊</span> עדכוני התקדמות</div>
+      <button class="btn btn-primary" onclick="toggleUpdateForm()" id="add-update-btn">
+        ➕ הוסף עדכון
+      </button>
     </div>
-    <div class="chart-wrap" id="chart-wrap" style="display:none">
-      <div class="chart-title">📈 יתרה חודשית לאורך זמן</div>
-      <svg class="chart-svg" id="chart-svg" viewBox="0 0 300 90" preserveAspectRatio="none"></svg>
+
+    <!-- Add update form -->
+    <div class="card add-update-form" id="update-form">
+      <h3 style="margin-bottom:18px;font-size:16px;color:var(--secondary)">✏️ עדכון חדש</h3>
+      <div class="form-group">
+        <label class="form-label">תאריך</label>
+        <input type="date" class="form-input" id="upd-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">כותרת</label>
+        <input type="text" class="form-input" id="upd-title" placeholder="מה בוצע היום?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">תיאור</label>
+        <textarea class="form-textarea" id="upd-desc" placeholder="פרט את ההתקדמות..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">תמונות</label>
+        <div class="photo-zone" onclick="document.getElementById('upd-photos-input').click()" id="upd-photo-zone">
+          <div class="photo-zone-icon">📷</div>
+          <div class="photo-zone-text">לחץ להוספת תמונות</div>
+          <div class="photo-zone-sub" style="font-size:12px;color:#aaa;margin-top:4px;">JPG, PNG, GIF</div>
+          <input type="file" id="upd-photos-input" multiple accept="image/*" onchange="handleUpdatePhotos(this)">
+        </div>
+        <div class="photo-previews" id="upd-photo-previews"></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="toggleUpdateForm(true)">ביטול</button>
+        <button class="btn btn-primary" onclick="saveUpdate()">💾 שמור עדכון</button>
+      </div>
     </div>
-    <div id="history-list"></div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+      <input type="text" class="form-input" id="prog-search" placeholder="🔍 חיפוש בעדכונים..." oninput="renderUpdates()">
+    </div>
+
+    <div class="updates-list" id="updates-list"></div>
+  </div>
+
+  <!-- ===== SECTION 3: PLANS ===== -->
+  <div id="section-plans" class="section">
+    <div class="section-header">
+      <div class="section-title"><span>📐</span> תוכניות</div>
+    </div>
+
+    <div class="plans-upload-zone" id="plans-drop-zone" onclick="document.getElementById('plans-input').click()">
+      <div class="plans-upload-icon">📁</div>
+      <div class="plans-upload-text">גרור קבצים לכאן או לחץ להעלאה</div>
+      <div class="plans-upload-sub">PDF, DWG, תמונות, ומסמכים נתמכים</div>
+      <input type="file" id="plans-input" multiple onchange="handlePlansUpload(this)">
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" class="form-input" id="plans-search" placeholder="🔍 חיפוש בתוכניות..." oninput="renderPlans()">
+      <select class="form-select" id="plans-filter" onchange="renderPlans()" style="max-width:180px">
+        <option value="">כל הסוגים</option>
+        <option value="image">תמונות</option>
+        <option value="pdf">PDF</option>
+        <option value="other">אחר</option>
+      </select>
+    </div>
+
+    <div id="plans-grid"></div>
+  </div>
+
+</main>
+
+<!-- ===== DAY MODAL ===== -->
+<div class="modal-overlay" id="day-modal-overlay" onclick="closeDayModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="day-modal-title">יומן יום</div>
+      <button class="modal-close" onclick="closeDayModal(null, true)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:18px;">
+        <label class="form-label">סה"כ פועלים</label>
+        <div class="worker-counter">
+          <button class="counter-btn" onclick="adjustWorkers(-1)">−</button>
+          <div class="counter-value" id="worker-count-display">0</div>
+          <button class="counter-btn" onclick="adjustWorkers(1)">+</button>
+        </div>
+      </div>
+      <div class="worker-types">
+        <label class="form-label" style="margin-bottom:10px">פירוט לפי סוג פועל</label>
+        <div class="worker-type-row">
+          <span class="worker-type-label">🧱 בנאים</span>
+          <input type="number" class="worker-type-input" id="wt-bricklayers" min="0" value="0" onchange="updateTotalFromTypes()">
+        </div>
+        <div class="worker-type-row">
+          <span class="worker-type-label">🔧 אינסטלטורים</span>
+          <input type="number" class="worker-type-input" id="wt-plumbers" min="0" value="0" onchange="updateTotalFromTypes()">
+        </div>
+        <div class="worker-type-row">
+          <span class="worker-type-label">⚡ חשמלאים</span>
+          <input type="number" class="worker-type-input" id="wt-electricians" min="0" value="0" onchange="updateTotalFromTypes()">
+        </div>
+        <div class="worker-type-row">
+          <span class="worker-type-label">🪵 נגרים</span>
+          <input type="number" class="worker-type-input" id="wt-carpenters" min="0" value="0" onchange="updateTotalFromTypes()">
+        </div>
+        <div class="worker-type-row">
+          <span class="worker-type-label">👷 כללי</span>
+          <input type="number" class="worker-type-input" id="wt-general" min="0" value="0" onchange="updateTotalFromTypes()">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">הערות</label>
+        <textarea class="form-textarea" id="day-notes" placeholder="הערות לגבי יום העבודה..." style="min-height:70px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="day-delete-btn" onclick="deleteDay()" style="display:none">🗑️ מחק</button>
+      <button class="btn btn-secondary" onclick="closeDayModal(null, true)">ביטול</button>
+      <button class="btn btn-primary" onclick="saveDayEntry()">💾 שמור</button>
+    </div>
   </div>
 </div>
 
+<!-- ===== IMAGE LIGHTBOX ===== -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- ===== TOAST ===== -->
 <div class="toast" id="toast"></div>
 
-<!-- Firebase 9 compat SDK — regular script tags, no modules -->
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-
 <script>
-var db = null;
-try {
-  firebase.initializeApp({
-    apiKey: "AIzaSyDdzHw1Z3ZWOmQQCTIFoiUGeuajwa0cSZI",
-    authDomain: "yossi20360.firebaseapp.com",
-    projectId: "yossi20360",
-    storageBucket: "yossi20360.firebasestorage.app",
-    messagingSenderId: "182925041359",
-    appId: "1:182925041359:web:2078bd4c57db060a8b21ba"
-  });
-  db = firebase.firestore();
-} catch(e) {
-  console.warn('Firebase not available:', e.message);
-}
+// ===== STATE =====
+let currentDate = new Date();
+let activeDayStr = null;
+let pendingUpdatePhotos = [];
 
-var CATEGORIES = [
-  { key: "rent",        label: "שכירות",  icon: "🏠", color: "#4F7942", def: 12650 },
-  { key: "mortgage",    label: "משכנתא",  icon: "🏦", color: "#3B5998", def: 7249 },
-  { key: "electricity", label: "חשמל",    icon: "⚡", color: "#F0A500" },
-  { key: "water",       label: "מים",     icon: "💧", color: "#4AADCF" },
-  { key: "arnona",      label: "ארנונה",  icon: "🏛️", color: "#9B59B6" },
-  { key: "vaad",        label: "ועד בית", icon: "🏢", color: "#E67E22" },
-  { key: "insurance",   label: "ביטוח",   icon: "🛡️", color: "#2ECC71", def: 88 },
-  { key: "internet",    label: "אינטרנט", icon: "🌐", color: "#1ABC9C", def: 40 }
-];
-var MISC_COLOR = "#95A5A6";
-var MONTHS_HE = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
-
-var HIST_MONTHS = {
-  "2023-03":{rent:12650,mortgage:11896,electricity:167,insurance:88,vaad:180},
-  "2023-04":{rent:12650,mortgage:7703,insurance:88,vaad:180},
-  "2023-05":{rent:12650,mortgage:7710,arnona:1241,insurance:88,vaad:180},
-  "2023-06":{rent:12650,mortgage:7935,arnona:1254,electricity:1452,misc:600,insurance:88,vaad:1260},
-  "2023-07":{rent:12650,mortgage:7874,water:839,misc:1100,insurance:88},
-  "2023-08":{rent:12650,mortgage:8002,arnona:1244,insurance:88},
-  "2023-09":{rent:12650,mortgage:8008,electricity:1802,water:899,insurance:88},
-  "2023-10":{rent:12650,mortgage:7892,electricity:1844,water:1032,arnona:1257,insurance:88},
-  "2023-11":{rent:12650,mortgage:8016,water:784,misc:250,insurance:88,vaad:1080},
-  "2023-12":{rent:12650,mortgage:7901,arnona:1267,electricity:2384,insurance:88},
-  "2024-01":{rent:12650,mortgage:7963,water:848,misc:1000,insurance:88},
-  "2024-02":{rent:12650,mortgage:7862,arnona:1238,electricity:1325,insurance:88},
-  "2024-03":{rent:12650,mortgage:7623,water:940,misc:250,insurance:88,vaad:1080},
-  "2024-04":{rent:12650,mortgage:7868,arnona:1254,electricity:1922,insurance:88},
-  "2024-05":{rent:12650,mortgage:7762,water:876,misc:1500,insurance:88},
-  "2024-06":{rent:12650,mortgage:7900,arnona:1259,electricity:1339,internet:40,insurance:88},
-  "2024-07":{rent:12650,mortgage:7786,electricity:2092,misc:1900,internet:40,insurance:88,vaad:1080},
-  "2024-08":{rent:12650,mortgage:7906,arnona:1298,water:874,misc:300,internet:40,insurance:88},
-  "2024-09":{rent:12650,mortgage:7919,electricity:2667,water:1036,internet:40,insurance:88},
-  "2024-10":{rent:12650,mortgage:7822,arnona:1281,water:816,internet:40,insurance:88},
-  "2024-11":{rent:12650,mortgage:7936,electricity:1806,water:973,arnona:1261,internet:40,insurance:88},
-  "2024-12":{rent:12650,mortgage:7829,electricity:1502,water:866,internet:40,insurance:88},
-  "2025-01":{rent:12650,mortgage:7942,arnona:1286,electricity:1794,water:742,internet:40,insurance:88,vaad:1200},
-  "2025-02":{rent:12650,mortgage:7941,electricity:1286,water:755,misc:1550,internet:40,insurance:88},
-  "2025-03":{rent:12650,mortgage:7607,arnona:1321,electricity:1764,misc:350,internet:40,insurance:88},
-  "2025-04":{rent:12650,mortgage:7953,water:990,internet:40,insurance:88},
-  "2025-05":{rent:12650,mortgage:7848,arnona:1330,electricity:2704,water:634,misc:500,internet:40,insurance:88,vaad:1200},
-  "2025-06":{rent:12650,mortgage:7965,electricity:1654,internet:40,insurance:88},
-  "2025-07":{rent:12650,mortgage:7867,arnona:1349,water:929,misc:1820,internet:40,insurance:88},
-  "2025-08":{rent:12650,mortgage:7990,electricity:1577,water:1103,internet:40,insurance:88},
-  "2025-09":{rent:12650,mortgage:8000,arnona:1371,internet:40,insurance:88},
-  "2025-10":{rent:12650,mortgage:7900,electricity:1666,internet:40,insurance:88},
-  "2025-11":{rent:12650,mortgage:8001,arnona:1363,misc:750,internet:40,insurance:88},
-  "2025-12":{rent:12650,mortgage:7966,arnona:1306,misc:350,internet:40,insurance:88},
-  "2026-01":{rent:12650,mortgage:7829,arnona:1344,internet:40,insurance:88},
-  "2026-02":{rent:12650,mortgage:12023,internet:40,insurance:88},
-  "2026-03":{rent:12650,mortgage:7249,internet:40,insurance:88},
-  "2026-04":{rent:12650,mortgage:7249,internet:40,insurance:88},
-  "2026-05":{rent:12650,internet:40,insurance:88}
+// ===== STORAGE HELPERS =====
+const DB = {
+  get: (k) => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch { return {}; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+  getArr: (k) => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } },
+  setArr: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
-var HIST_DISTS = [
-  {id:"d1",date:"2023-07-14",yossi:5000,shrolik:5000},
-  {id:"d2",date:"2024-02-25",yossi:8500,shrolik:8500},
-  {id:"d3",date:"2024-05-30",yossi:5000,shrolik:5000},
-  {id:"d4",date:"2025-05-25",yossi:10000,shrolik:10000},
-  {id:"d5",date:"2026-05-07",yossi:10900,shrolik:10900}
-];
 
-function currentBillingMonth() {
-  var now = new Date();
-  var d = now.getDate(), m = now.getMonth(), y = now.getFullYear();
-  if (d >= 15) { m++; if (m > 11) { m = 0; y++; } }
-  return { year: y, month: m };
+// ===== TABS =====
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const map = { journal: 0, progress: 1, plans: 2 };
+  btns[map[name]].classList.add('active');
+  if (name === 'journal') renderCalendar();
+  if (name === 'progress') renderUpdates();
+  if (name === 'plans') renderPlans();
 }
 
-var _cur = currentBillingMonth();
-var activeYear  = _cur.year;
-var activeMonth = _cur.month;
-var allData = {};
-var allDist = [];
-var currentView = 'summary';
-var offlineMode = false;
-var VIEW_ORDER = ['summary','entry','history'];
-var VIEW_BTN_IDX = {summary:0,entry:1,history:2};
-
-function navigateToView(v) {
-  var btn = document.querySelectorAll('.tab-btn')[VIEW_BTN_IDX[v]];
-  switchView(v, btn);
+// ===== DATE HELPERS =====
+function todayStr() {
+  return fmtDate(new Date());
+}
+function fmtDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function hebrewDate(dateStr) {
+  const [y,m,d] = dateStr.split('-');
+  const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  return `${parseInt(d)} ב${months[parseInt(m)-1]} ${y}`;
+}
+function hebrewMonth(year, month) {
+  const months = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+  return `${months[month]} ${year}`;
 }
 
-function monthKey(y, m) { return y + '-' + String(m+1).padStart(2,'0'); }
-
-function escHtml(s) {
-  var d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-
-function getMiscItems(e) {
-  if (e.miscItems && e.miscItems.length) return e.miscItems;
-  if (e.misc) return [{amount:e.misc, note:e.miscNote||''}];
-  return [];
-}
-
-function getMiscTotal(e) {
-  return getMiscItems(e).reduce(function(s,i){ return s+(i.amount||0); }, 0);
-}
-
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
-
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); })
-  ]);
-}
-
-function monthBalance(e) {
-  var income = e.rent || 0;
-  var exp = CATEGORIES.filter(function(c){ return c.key!=='rent'; })
-              .reduce(function(s,c){ return s+(e[c.key]||0); }, 0);
-  return income - exp - getMiscTotal(e);
-}
-
-function useFallback() {
-  offlineMode = true;
-  allData = Object.assign({}, HIST_MONTHS);
-  allDist = HIST_DISTS.map(function(d){ return Object.assign({},d); });
-  allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
-  var banner = document.getElementById('offline-banner');
-  if (banner) banner.classList.add('show');
-}
-
-async function loadAllData() {
-  if (!db) { useFallback(); return; }
-  try {
-    var snap = await withTimeout(db.collection('months').get(), 10000);
-    snap.forEach(function(d){ allData[d.id] = d.data(); });
-    var dsnap = await withTimeout(db.collection('distributions').get(), 10000);
-    allDist = [];
-    dsnap.forEach(function(d){ allDist.push(Object.assign({id:d.id}, d.data())); });
-    allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
-    if (Object.keys(allData).length === 0) await seedData();
-    var banner = document.getElementById('offline-banner');
-    if (banner) banner.classList.remove('show');
-  } catch(e) {
-    console.error('Firebase:', e);
-    useFallback();
-  }
-}
-
-async function seedData() {
-  for (var k in HIST_MONTHS) {
-    await db.collection('months').doc(k).set(HIST_MONTHS[k]);
-    allData[k] = HIST_MONTHS[k];
-  }
-  for (var i=0; i<HIST_DISTS.length; i++) {
-    var d = HIST_DISTS[i];
-    await db.collection('distributions').doc(d.id).set({date:d.date,yossi:d.yossi,shrolik:d.shrolik});
-    allDist.push(Object.assign({},d));
-  }
-}
-
-function switchView(v, btn) {
-  currentView = v;
-  document.querySelectorAll('.view').forEach(function(el){ el.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
-  document.getElementById('view-'+v).classList.add('active');
-  btn.classList.add('active');
-  updateDots(v);
-  if (v==='entry') renderEntry();
-  if (v==='summary') renderSummary();
-  if (v==='history') renderHistory();
-}
-
-function updateDots(v) {
-  var idx = VIEW_ORDER.indexOf(v);
-  document.querySelectorAll('.swipe-dot').forEach(function(dot, i){
-    dot.classList.toggle('active', i === idx);
-  });
-}
-
-function renderEntry() {
-  var key = monthKey(activeYear, activeMonth);
-  var entry = allData[key] || {};
-  var saved = !!allData[key];
-  document.getElementById('month-label').textContent = MONTHS_HE[activeMonth]+' '+activeYear;
-  document.getElementById('saved-badge').textContent = saved ? '✓ נשמר' : '';
-  var list = document.getElementById('cat-list');
-  list.innerHTML = '';
-  CATEGORIES.forEach(function(cat) {
-    var val = entry[cat.key]!==undefined ? entry[cat.key] : (saved?'':(cat.def!==undefined?cat.def:''));
-    var card = document.createElement('div');
-    card.className = 'cat-card';
-    card.innerHTML =
-      '<div class="cat-icon" style="background:'+cat.color+'20">'+cat.icon+'</div>'+
-      '<div class="cat-info">'+
-        '<div class="cat-label">'+cat.label+'</div>'+
-        '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
-          ' data-key="'+cat.key+'"'+
-          ' onfocus="this.style.borderColor=\''+cat.color+'\'"'+
-          ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
-          ' oninput="updateMonthlySummary()">'+
-      '</div>'+
-      '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+
-        (val!==''?'₪'+Number(val).toLocaleString():'')+
-      '</div>';
-    list.appendChild(card);
-  });
-  var miscSec = document.createElement('div');
-  miscSec.className = 'cat-card misc-section';
-  miscSec.innerHTML =
-    '<div class="misc-header">'+
-      '<div class="cat-icon" style="background:'+MISC_COLOR+'20">📦</div>'+
-      '<div style="flex:1;font-size:13px;font-weight:600;color:#4A5568">שונות</div>'+
-      '<div style="font-size:14px;font-weight:700;color:'+MISC_COLOR+'" id="misc-total"></div>'+
-    '</div>'+
-    '<div id="misc-rows"></div>'+
-    '<button class="misc-add-btn" onclick="addMiscRow(\'\',\'\');">+ הוסף שונות</button>';
-  list.appendChild(miscSec);
-  getMiscItems(entry).forEach(function(item){ addMiscRow(item.note, item.amount); });
-  updateMiscTotal();
-  updateMonthlySummary();
-  var btn = document.getElementById('save-btn');
-  btn.classList.remove('saved');
-  btn.textContent = 'שמור חודש';
-  btn.disabled = false;
-  var cur = currentBillingMonth();
-  document.getElementById('today-btn').disabled = (activeYear===cur.year&&activeMonth===cur.month);
-  var badge = document.getElementById('draft-badge');
-  if (badge) badge.textContent = '';
-  if (!saved) restoreDraft(key);
-}
-
-function updateMonthlySummary() {
-  var income=0, expenses=0;
-  CATEGORIES.forEach(function(cat){
-    var inp = document.querySelector('[data-key="'+cat.key+'"]');
-    if (!inp) return;
-    var v = parseFloat(inp.value)||0;
-    var el = document.getElementById('val-'+cat.key);
-    if (el) el.textContent = inp.value!==''?'₪'+v.toLocaleString():'';
-    if (cat.key==='rent') income=v; else expenses+=v;
-  });
-  document.querySelectorAll('.misc-row-amount').forEach(function(inp){ expenses+=parseFloat(inp.value)||0; });
-  var bal = income-expenses;
-  document.getElementById('sum-income').textContent = '₪'+income.toLocaleString();
-  document.getElementById('sum-expenses').textContent = '₪'+expenses.toLocaleString();
-  var balEl = document.getElementById('sum-balance');
-  balEl.textContent = (bal>=0?'+':'')+'₪'+bal.toLocaleString();
-  balEl.style.color = bal>=0?'#68D391':'#FEB2B2';
-  scheduleDraftSave();
-}
-
+// ===== CALENDAR =====
 function changeMonth(dir) {
-  activeMonth -= dir;
-  if (activeMonth<0)  { activeMonth=11; activeYear--; }
-  if (activeMonth>11) { activeMonth=0;  activeYear++; }
-  renderEntry();
+  currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + dir, 1);
+  renderCalendar();
 }
 
-function goToToday() {
-  var cur = currentBillingMonth();
-  activeYear=cur.year; activeMonth=cur.month;
-  renderEntry();
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const today = todayStr();
+  const journal = DB.get('journal');
+
+  document.getElementById('cal-month-label').textContent = hebrewMonth(year, month);
+
+  const grid = document.getElementById('calendar-grid');
+  const dayNames = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  grid.innerHTML = dayNames.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    grid.innerHTML += `<div class="cal-day empty"></div>`;
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const entry = journal[ds];
+    const isToday = ds === today;
+    const isFuture = ds > today;
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (entry && entry.total > 0) cls += ' has-data';
+    if (isFuture) cls += ' future';
+    grid.innerHTML += `
+      <div class="${cls}" onclick="openDayModal('${ds}')" title="${hebrewDate(ds)}">
+        <div class="cal-day-num">${day}</div>
+        ${entry && entry.total > 0 ? `<div class="cal-day-workers">${entry.total} פ'</div>` : ''}
+      </div>`;
+  }
+
+  // Monthly stats
+  let totalDays = 0, totalWorkers = 0, maxDay = 0;
+  for (const [ds, e] of Object.entries(journal)) {
+    const [y,m] = ds.split('-');
+    if (parseInt(y) === year && parseInt(m)-1 === month && e.total > 0) {
+      totalDays++;
+      totalWorkers += e.total;
+      if (e.total > maxDay) maxDay = e.total;
+    }
+  }
+  document.getElementById('monthly-stats').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-num">${totalDays}</div>
+      <div class="stat-label">ימי עבודה</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${totalWorkers}</div>
+      <div class="stat-label">סה"כ נוכחות</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">${maxDay}</div>
+      <div class="stat-label">שיא יומי</div>
+    </div>`;
+
+  renderJournalRecent();
 }
 
-function addMiscRow(note, amount) {
-  var row = document.createElement('div');
-  row.className = 'misc-row';
-  var mc = MISC_COLOR;
-  var noteVal = escHtml(String(note||''));
-  var amtVal = amount || '';
-  row.innerHTML =
-    '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+noteVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
-    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
-    ' oninput="scheduleDraftSave()">'+
-    '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+amtVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
-    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
-    ' oninput="updateMiscTotal();updateMonthlySummary()">'+
-    '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>';
-  document.getElementById('misc-rows').appendChild(row);
-  updateMiscTotal();
-  updateMonthlySummary();
+function renderJournalRecent() {
+  const journal = DB.get('journal');
+  const entries = Object.entries(journal)
+    .filter(([,e]) => e.total > 0)
+    .sort((a,b) => b[0].localeCompare(a[0]))
+    .slice(0, 5);
+
+  const container = document.getElementById('journal-recent');
+  if (entries.length === 0) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="card">
+      <div style="font-size:15px;font-weight:700;color:var(--secondary);margin-bottom:14px;">📋 רשומות אחרונות</div>
+      ${entries.map(([ds, e]) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="openDayModal('${ds}')">
+          <div>
+            <div style="font-weight:600;font-size:14px">${hebrewDate(ds)}</div>
+            ${e.notes ? `<div style="font-size:12px;color:var(--text-light);margin-top:2px">${e.notes.substring(0,60)}${e.notes.length>60?'...':''}</div>` : ''}
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:var(--primary)">${e.total}</div>
+            <div style="font-size:11px;color:var(--text-light)">פועלים</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
 }
 
-function updateMiscTotal() {
-  var total=0;
-  document.querySelectorAll('.misc-row-amount').forEach(function(inp){ total+=parseFloat(inp.value)||0; });
-  var el = document.getElementById('misc-total');
-  if (el) el.textContent = total>0?'₪'+total.toLocaleString():'';
+// ===== DAY MODAL =====
+function openDayModal(dateStr) {
+  activeDayStr = dateStr;
+  document.getElementById('day-modal-title').textContent = '📅 ' + hebrewDate(dateStr);
+
+  const journal = DB.get('journal');
+  const entry = journal[dateStr] || { total: 0, types: {}, notes: '' };
+
+  document.getElementById('worker-count-display').textContent = entry.total || 0;
+  document.getElementById('day-notes').value = entry.notes || '';
+  document.getElementById('wt-bricklayers').value = (entry.types && entry.types.bricklayers) || 0;
+  document.getElementById('wt-plumbers').value = (entry.types && entry.types.plumbers) || 0;
+  document.getElementById('wt-electricians').value = (entry.types && entry.types.electricians) || 0;
+  document.getElementById('wt-carpenters').value = (entry.types && entry.types.carpenters) || 0;
+  document.getElementById('wt-general').value = (entry.types && entry.types.general) || 0;
+
+  const deleteBtn = document.getElementById('day-delete-btn');
+  deleteBtn.style.display = (journal[dateStr] && journal[dateStr].total > 0) ? 'inline-flex' : 'none';
+
+  document.getElementById('day-modal-overlay').classList.add('open');
 }
 
-async function saveMonth() {
-  var key = monthKey(activeYear, activeMonth);
-  var entry = {};
-  CATEGORIES.forEach(function(cat){
-    var inp = document.querySelector('[data-key="'+cat.key+'"]');
-    var v = parseFloat(inp.value);
-    if (!isNaN(v) && inp.value!=='') entry[cat.key]=v;
-  });
-  var miscItems=[];
-  document.querySelectorAll('.misc-row').forEach(function(row){
-    var amt = parseFloat(row.querySelector('.misc-row-amount').value);
-    var note = row.querySelector('.misc-row-note').value.trim();
-    if (!isNaN(amt)&&amt>0) miscItems.push({note:note,amount:amt});
-  });
-  if (miscItems.length) entry.miscItems=miscItems;
-  var btn = document.getElementById('save-btn');
-  btn.disabled=true; btn.textContent='שומר...';
-  try {
-    await db.collection('months').doc(key).set(entry);
-    allData[key]=entry;
-    localStorage.removeItem('draft_'+key);
-    var draftBadge = document.getElementById('draft-badge');
-    if (draftBadge) draftBadge.textContent = '';
-    document.getElementById('saved-badge').textContent='✓ נשמר';
-    btn.classList.add('saved'); btn.textContent='✓ נשמר בהצלחה!';
-    showToast('✓ החודש נשמר בענן');
-  } catch(e) {
-    btn.disabled=false; btn.textContent='שמור חודש';
-    showToast('❌ שגיאה בשמירה');
+function closeDayModal(e, force) {
+  if (!force && e && e.target !== document.getElementById('day-modal-overlay')) return;
+  document.getElementById('day-modal-overlay').classList.remove('open');
+  activeDayStr = null;
+}
+
+function adjustWorkers(delta) {
+  const el = document.getElementById('worker-count-display');
+  const val = Math.max(0, parseInt(el.textContent || 0) + delta);
+  el.textContent = val;
+}
+
+function updateTotalFromTypes() {
+  const types = ['bricklayers','plumbers','electricians','carpenters','general'];
+  const total = types.reduce((s, t) => s + (parseInt(document.getElementById('wt-'+t).value)||0), 0);
+  document.getElementById('worker-count-display').textContent = total;
+}
+
+function saveDayEntry() {
+  if (!activeDayStr) return;
+  const total = parseInt(document.getElementById('worker-count-display').textContent) || 0;
+  const types = {
+    bricklayers: parseInt(document.getElementById('wt-bricklayers').value)||0,
+    plumbers: parseInt(document.getElementById('wt-plumbers').value)||0,
+    electricians: parseInt(document.getElementById('wt-electricians').value)||0,
+    carpenters: parseInt(document.getElementById('wt-carpenters').value)||0,
+    general: parseInt(document.getElementById('wt-general').value)||0,
+  };
+  const notes = document.getElementById('day-notes').value.trim();
+  const journal = DB.get('journal');
+  journal[activeDayStr] = { total, types, notes, updatedAt: Date.now() };
+  DB.set('journal', journal);
+  closeDayModal(null, true);
+  renderCalendar();
+  showToast('✅ היומן עודכן בהצלחה', 'success');
+}
+
+function deleteDay() {
+  if (!activeDayStr) return;
+  const journal = DB.get('journal');
+  delete journal[activeDayStr];
+  DB.set('journal', journal);
+  closeDayModal(null, true);
+  renderCalendar();
+  showToast('🗑️ הרשומה נמחקה', '');
+}
+
+// ===== PROGRESS UPDATES =====
+function toggleUpdateForm(forceClose) {
+  const form = document.getElementById('update-form');
+  const btn = document.getElementById('add-update-btn');
+  if (forceClose || form.classList.contains('open')) {
+    form.classList.remove('open');
+    btn.innerHTML = '➕ הוסף עדכון';
+    resetUpdateForm();
+  } else {
+    form.classList.add('open');
+    btn.innerHTML = '✕ סגור';
+    document.getElementById('upd-date').value = todayStr();
+    document.getElementById('upd-date').max = todayStr();
   }
 }
 
-function renderSummary() {
-  var di = document.getElementById('dist-date');
-  if (!di.value) di.value = new Date().toISOString().slice(0,10);
-  var totalProfit = Object.values(allData).reduce(function(s,e){ return s+monthBalance(e); }, 0);
-  var totalDist   = allDist.reduce(function(s,d){ return s+d.yossi+d.shrolik; }, 0);
-  var cash = totalProfit-totalDist;
-  document.getElementById('cash-amount').textContent = '₪'+cash.toLocaleString();
-  document.getElementById('cash-sub').textContent = offlineMode
-    ? 'נתונים מקומיים – '+Object.keys(allData).length+' חודשים'
-    : 'מתוך '+Object.keys(allData).length+' חודשים מוזנים';
-  document.getElementById('total-profit').textContent = '₪'+totalProfit.toLocaleString();
-  document.getElementById('total-dist').textContent   = '₪'+totalDist.toLocaleString();
-  var list = document.getElementById('dist-list');
-  list.innerHTML='';
-  if (!allDist.length) { list.innerHTML='<div class="empty-msg">אין חלוקות עדיין</div>'; return; }
-  allDist.forEach(function(d){
-    var row = document.createElement('div');
-    row.className='dist-row';
-    row.innerHTML=
-      '<div>'+
-        '<div class="dist-date">'+d.date+'</div>'+
-        '<div class="dist-names">יוסי: ₪'+d.yossi.toLocaleString()+' | שרוליק: ₪'+d.shrolik.toLocaleString()+'</div>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center">'+
-        '<span class="dist-total">₪'+(d.yossi+d.shrolik).toLocaleString()+'</span>'+
-        '<button class="del-btn" onclick="removeDistribution(\''+d.id+'\')" >✕</button>'+
-      '</div>';
-    list.appendChild(row);
+function resetUpdateForm() {
+  document.getElementById('upd-date').value = '';
+  document.getElementById('upd-title').value = '';
+  document.getElementById('upd-desc').value = '';
+  document.getElementById('upd-photo-previews').innerHTML = '';
+  pendingUpdatePhotos = [];
+}
+
+function handleUpdatePhotos(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingUpdatePhotos.push({ name: file.name, data: e.target.result });
+      renderUpdatePhotoPreviews();
+    };
+    reader.readAsDataURL(file);
   });
+  input.value = '';
 }
 
-async function addDistribution() {
-  var date    = document.getElementById('dist-date').value;
-  var yossi   = parseFloat(document.getElementById('dist-yossi').value)||0;
-  var shrolik = parseFloat(document.getElementById('dist-shrolik').value)||0;
-  if (!date) { showToast('נא לבחור תאריך'); return; }
-  var id = 'd'+Date.now();
-  try {
-    await db.collection('distributions').doc(id).set({date:date,yossi:yossi,shrolik:shrolik});
-    allDist.push({id:id,date:date,yossi:yossi,shrolik:shrolik});
-    allDist.sort(function(a,b){ return a.date.localeCompare(b.date); });
-    document.getElementById('dist-date').value='';
-    document.getElementById('dist-yossi').value='';
-    document.getElementById('dist-shrolik').value='';
-    renderSummary();
-    showToast('✓ חלוקה נשמרה');
-  } catch(e) { showToast('❌ שגיאה בשמירה'); }
+function renderUpdatePhotoPreviews() {
+  const container = document.getElementById('upd-photo-previews');
+  container.innerHTML = pendingUpdatePhotos.map((p, i) => `
+    <div class="photo-preview-item">
+      <img src="${p.data}" alt="${p.name}">
+      <button class="remove-photo" onclick="removePendingPhoto(${i})">✕</button>
+    </div>`).join('');
 }
 
-async function removeDistribution(id) {
-  try {
-    await db.collection('distributions').doc(id).delete();
-    allDist = allDist.filter(function(d){ return d.id!==id; });
-    renderSummary();
-    showToast('✓ נמחק');
-  } catch(e) { showToast('❌ שגיאה במחיקה'); }
+function removePendingPhoto(idx) {
+  pendingUpdatePhotos.splice(idx, 1);
+  renderUpdatePhotoPreviews();
 }
 
-function renderChart() {
-  var chartWrap = document.getElementById('chart-wrap');
-  var svg = document.getElementById('chart-svg');
-  var keys = Object.keys(allData).sort();
-  if (keys.length < 2) { chartWrap.style.display='none'; return; }
-  chartWrap.style.display='block';
-  var balances = keys.map(function(k){ return monthBalance(allData[k]); });
-  var min = Math.min.apply(null, balances);
-  var max = Math.max.apply(null, balances);
-  var range = max - min || 1;
-  var W=300, H=90, PAD=8;
-  var pts = balances.map(function(b, i){
-    var x = PAD + (i / (keys.length-1)) * (W - 2*PAD);
-    var y = H - PAD - ((b - min) / range) * (H - 2*PAD);
-    return x.toFixed(1)+','+y.toFixed(1);
+function saveUpdate() {
+  const date = document.getElementById('upd-date').value;
+  const title = document.getElementById('upd-title').value.trim();
+  const desc = document.getElementById('upd-desc').value.trim();
+  if (!date || !title) { showToast('נא למלא תאריך וכותרת', 'error'); return; }
+  const updates = DB.getArr('updates');
+  updates.unshift({
+    id: Date.now(),
+    date,
+    title,
+    desc,
+    photos: [...pendingUpdatePhotos],
+    createdAt: Date.now()
   });
-  var ptsStr = pts.join(' ');
-  svg.innerHTML =
-    '<polygon fill="rgba(74,144,217,0.12)" stroke="none" points="'+PAD+','+H+' '+ptsStr+' '+(W-PAD)+','+H+'"/>'+
-    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'" />';
+  DB.setArr('updates', updates);
+  toggleUpdateForm(true);
+  renderUpdates();
+  showToast('✅ העדכון נשמר בהצלחה', 'success');
 }
 
-function renderHistory() {
-  renderChart();
-  var keys = Object.keys(allData).sort().reverse();
-  var list = document.getElementById('history-list');
-  list.innerHTML='';
-  if (!keys.length) {
-    list.innerHTML='<div class="no-history"><div style="font-size:32px;margin-bottom:8px">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
+function renderUpdates() {
+  const updates = DB.getArr('updates');
+  const q = (document.getElementById('prog-search')?.value || '').toLowerCase();
+  const filtered = updates.filter(u =>
+    !q || u.title.toLowerCase().includes(q) || (u.desc||'').toLowerCase().includes(q)
+  );
+  const container = document.getElementById('updates-list');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">אין עדכונים עדיין</div><div class="empty-sub">לחץ על "הוסף עדכון" כדי להתחיל</div></div>`;
     return;
   }
-  var cur = currentBillingMonth();
-  var curKey = monthKey(cur.year, cur.month);
-  var byYear = {};
-  keys.forEach(function(k){
-    var yr = k.split('-')[0];
-    if (!byYear[yr]) byYear[yr] = [];
-    byYear[yr].push(k);
-  });
-  var years = Object.keys(byYear).sort().reverse();
-  years.forEach(function(yr){
-    var yearKeys = byYear[yr];
-    var yearBal = yearKeys.reduce(function(s,k){ return s+monthBalance(allData[k]||{}); }, 0);
-    var yh = document.createElement('div');
-    yh.className = 'year-header';
-    yh.innerHTML =
-      '<span class="year-label">'+yr+'</span>'+
-      '<span class="year-total" style="color:'+(yearBal>=0?'#276749':'#E53E3E')+'">'+(yearBal>=0?'+':'')+'₪'+yearBal.toLocaleString()+'</span>';
-    list.appendChild(yh);
-    yearKeys.forEach(function(k){
-      var parts = k.split('-').map(Number);
-      var y=parts[0], m=parts[1];
-      var entry=allData[k]||{};
-      var balance=monthBalance(entry);
-      var isCur = k===curKey;
-      var card=document.createElement('div');
-      card.className='hist-card'+(isCur?' current-month':'');
-      var tags = CATEGORIES.filter(function(c){ return entry[c.key]; }).map(function(c){
-        return '<span class="hist-tag" style="background:'+c.color+'18;color:'+c.color+'">'+c.icon+' '+c.label+': ₪'+entry[c.key].toLocaleString()+'</span>';
-      }).concat(getMiscItems(entry).map(function(i){
-        return '<span class="hist-tag" style="background:'+MISC_COLOR+'18;color:'+MISC_COLOR+'">📦 '+(i.note?escHtml(i.note):'שונות')+': ₪'+i.amount.toLocaleString()+'</span>';
-      })).join('');
-      var curBadge = isCur ? '<span class="current-month-badge">חודש נוכחי</span>' : '';
-      card.innerHTML=
-        '<div class="hist-card-top">'+
-          '<span class="hist-month">'+curBadge+MONTHS_HE[m-1]+' '+y+'</span>'+
-          '<div style="display:flex;align-items:center;gap:8px">'+
-            '<span class="hist-balance" style="color:'+(balance>=0?'#276749':'#E53E3E')+'">'+(balance>=0?'+':'')+'₪'+balance.toLocaleString()+'</span>'+
-            '<button class="hist-del-btn" onclick="event.stopPropagation();deleteMonth(\''+k+'\')" >✕</button>'+
-          '</div>'+
-        '</div>'+
-        '<div class="hist-tags">'+tags+'</div>';
-      (function(yr, mn){ card.addEventListener('click', function(){ activeYear=yr; activeMonth=mn-1; navigateToView('entry'); }); })(y, m);
-      list.appendChild(card);
+  container.innerHTML = filtered.map(u => `
+    <div class="update-card">
+      <div class="update-card-header">
+        <div>
+          <div class="update-card-title">${u.title}</div>
+          <div class="update-card-date">📅 ${hebrewDate(u.date)}</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteUpdate(${u.id})">🗑️</button>
+      </div>
+      ${u.desc ? `<div class="update-card-body"><div class="update-card-desc">${u.desc.replace(/\n/g,'<br>')}</div>` : '<div class="update-card-body">'}
+      ${u.photos && u.photos.length > 0 ? `<div class="update-card-photos">${u.photos.map((p,i) => `<img class="update-photo" src="${p.data}" alt="${p.name}" onclick="openLightbox('${p.data}')">` ).join('')}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function deleteUpdate(id) {
+  let updates = DB.getArr('updates');
+  updates = updates.filter(u => u.id !== id);
+  DB.setArr('updates', updates);
+  renderUpdates();
+  showToast('🗑️ העדכון נמחק', '');
+}
+
+// ===== PLANS =====
+function handlePlansUpload(input) {
+  const files = Array.from(input.files);
+  const plans = DB.getArr('plans');
+  let count = 0;
+  const process = (file) => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const type = ['jpg','jpeg','png','gif','webp','svg'].includes(ext) ? 'image' :
+                     ext === 'pdf' ? 'pdf' : 'other';
+        plans.unshift({
+          id: Date.now() + Math.random(),
+          name: file.name,
+          size: file.size,
+          type,
+          ext,
+          data: e.target.result,
+          uploadedAt: Date.now()
+        });
+        count++;
+        resolve();
+      };
+      reader.readAsDataURL(file);
     });
+  };
+  Promise.all(files.map(process)).then(() => {
+    DB.setArr('plans', plans);
+    renderPlans();
+    showToast(`✅ ${count} קבצים הועלו בהצלחה`, 'success');
+  });
+  input.value = '';
+}
+
+function renderPlans() {
+  const plans = DB.getArr('plans');
+  const q = (document.getElementById('plans-search')?.value||'').toLowerCase();
+  const ft = document.getElementById('plans-filter')?.value||'';
+  const filtered = plans.filter(p =>
+    (!q || p.name.toLowerCase().includes(q)) &&
+    (!ft || p.type === ft)
+  );
+  const container = document.getElementById('plans-grid');
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📐</div><div class="empty-text">אין תוכניות עדיין</div><div class="empty-sub">גרור קבצים או לחץ להעלאה</div></div>`;
+    return;
+  }
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  }
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleDateString('he-IL');
+  }
+  function fileIcon(p) {
+    if (p.type === 'image') return '🖼️';
+    if (p.ext === 'pdf') return '📄';
+    if (['dwg','dxf'].includes(p.ext)) return '📐';
+    if (['doc','docx'].includes(p.ext)) return '📝';
+    if (['xls','xlsx'].includes(p.ext)) return '📊';
+    return '📁';
+  }
+  container.innerHTML = `<div class="plans-grid">${filtered.map(p => `
+    <div class="plan-item">
+      ${p.type === 'image' ? `<img class="plan-thumb" src="${p.data}" alt="${p.name}" onclick="openLightbox('${p.data}')" style="cursor:pointer">` : `<div class="plan-icon">${fileIcon(p)}</div>`}
+      <div class="plan-name">${p.name}</div>
+      <div class="plan-size">${fmtSize(p.size)}</div>
+      <div class="plan-date">הועלה: ${fmtTime(p.uploadedAt)}</div>
+      <div class="plan-actions">
+        <button class="btn btn-secondary btn-sm" onclick="downloadPlan('${p.id.toString().replace(/'/g,'')}')">⬇️</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePlan('${p.id.toString().replace(/'/g,'')}')">🗑️</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function downloadPlan(id) {
+  const plans = DB.getArr('plans');
+  const plan = plans.find(p => p.id.toString() === id.toString());
+  if (!plan) return;
+  const a = document.createElement('a');
+  a.href = plan.data;
+  a.download = plan.name;
+  a.click();
+}
+
+function deletePlan(id) {
+  let plans = DB.getArr('plans');
+  plans = plans.filter(p => p.id.toString() !== id.toString());
+  DB.setArr('plans', plans);
+  renderPlans();
+  showToast('🗑️ הקובץ נמחק', '');
+}
+
+// ===== DRAG & DROP =====
+function setupDrop(zoneId, handler) {
+  const zone = document.getElementById(zoneId);
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const dt = e.dataTransfer;
+    if (dt.files.length) handler({ files: dt.files, value: '' });
   });
 }
 
-async function deleteMonth(key) {
-  if (!confirm('למחוק את הנתונים של החודש הזה?')) return;
-  try {
-    await db.collection('months').doc(key).delete();
-    delete allData[key];
-    renderHistory();
-    if (monthKey(activeYear,activeMonth)===key) renderEntry();
-    showToast('✓ החודש נמחק');
-  } catch(e) { showToast('❌ שגיאה במחיקה'); }
+// ===== LIGHTBOX =====
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
 }
 
-function exportCsv() {
-  var rows = [['חודש','הכנסה (שכירות)'].concat(CATEGORIES.filter(function(c){return c.key!=='rent';}).map(function(c){return c.label;})).concat(['שונות','פירוט שונות','יתרה'])];
-  Object.keys(allData).sort().forEach(function(k){
-    var e=allData[k];
-    var mi=getMiscItems(e);
-    rows.push([k,e.rent||0].concat(CATEGORIES.filter(function(c){return c.key!=='rent';}).map(function(c){return e[c.key]||0;})).concat([getMiscTotal(e),mi.map(function(i){return i.note||'שונות';}).join(' | '),monthBalance(e)]));
-  });
-  rows.push([]);
-  rows.push(['תאריך חלוקה','יוסי','שרוליק','סהכ']);
-  allDist.forEach(function(d){ rows.push([d.date,d.yossi,d.shrolik,d.yossi+d.shrolik]); });
-  var csv='﻿'+rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url; a.download='ניהול-נכס.csv'; a.click();
-  URL.revokeObjectURL(url);
+// ===== TOAST =====
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type || '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-var _draftTimer = null;
-function scheduleDraftSave() {
-  if (currentView !== 'entry') return;
-  var key = monthKey(activeYear, activeMonth);
-  if (allData[key]) return;
-  clearTimeout(_draftTimer);
-  var badge = document.getElementById('draft-badge');
-  if (badge) badge.textContent = '✏️ שומר טיוטה...';
-  _draftTimer = setTimeout(saveDraft, 800);
-}
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  renderCalendar();
+  setupDrop('upd-photo-zone', handleUpdatePhotos);
+  setupDrop('plans-drop-zone', handlePlansUpload);
 
-function saveDraft() {
-  var key = monthKey(activeYear, activeMonth);
-  if (allData[key]) return;
-  var draft = {};
-  CATEGORIES.forEach(function(cat){
-    var inp = document.querySelector('[data-key="'+cat.key+'"]');
-    if (inp && inp.value !== '') draft[cat.key] = inp.value;
-  });
-  var miscItems = [];
-  document.querySelectorAll('.misc-row').forEach(function(row){
-    var amt = row.querySelector('.misc-row-amount').value;
-    var note = row.querySelector('.misc-row-note').value.trim();
-    if (amt) miscItems.push({note:note, amount:parseFloat(amt)});
-  });
-  if (miscItems.length) draft.miscItems = miscItems;
-  try {
-    localStorage.setItem('draft_'+key, JSON.stringify(draft));
-    var badge = document.getElementById('draft-badge');
-    if (badge) badge.textContent = '✏️ טיוטה שמורה';
-  } catch(e) {}
-}
-
-function restoreDraft(key) {
-  try {
-    var raw = localStorage.getItem('draft_'+key);
-    if (!raw) return;
-    var draft = JSON.parse(raw);
-    CATEGORIES.forEach(function(cat){
-      var inp = document.querySelector('[data-key="'+cat.key+'"]');
-      if (inp && draft[cat.key] !== undefined) inp.value = draft[cat.key];
-    });
-    document.getElementById('misc-rows').innerHTML = '';
-    (draft.miscItems||[]).forEach(function(i){ addMiscRow(i.note, i.amount); });
-    updateMiscTotal();
-    updateMonthlySummary();
-    var badge = document.getElementById('draft-badge');
-    if (badge) badge.textContent = '✏️ שוחזרה טיוטה';
-  } catch(e) {}
-}
-
-(function(){
-  var startX=0, startY=0;
-  document.addEventListener('touchstart',function(e){
-    startX=e.touches[0].clientX;
-    startY=e.touches[0].clientY;
-  },{passive:true});
-  document.addEventListener('touchend',function(e){
-    var dx=e.changedTouches[0].clientX-startX;
-    var dy=e.changedTouches[0].clientY-startY;
-    if (Math.abs(dx)<50 || Math.abs(dx)<Math.abs(dy)) return;
-    var idx=VIEW_ORDER.indexOf(currentView);
-    if (dx>0 && idx<VIEW_ORDER.length-1) navigateToView(VIEW_ORDER[idx+1]);
-    else if (dx<0 && idx>0) navigateToView(VIEW_ORDER[idx-1]);
-  },{passive:true});
-})();
-
-document.getElementById('cat-list').innerHTML='<div class="loading">⏳ טוען נתונים...</div>';
-loadAllData().then(function(){ renderSummary(); });
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(reg){
-      var url=((reg.active||reg.installing||reg.waiting)||{}).scriptURL||'';
-      if (!url.endsWith('sw2.js')) reg.unregister();
-    });
-    navigator.serviceWorker.register('./sw2.js');
-  });
-}
+  // Set today's date max for update form
+  const d = document.getElementById('upd-date');
+  if (d) { d.max = todayStr(); d.value = todayStr(); }
+});
 </script>
 </body>
 </html>
