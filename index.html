@@ -73,6 +73,10 @@
   .cashbox .label { font-size: 14px; color: #9AE6B4; margin-bottom: 6px; }
   .cashbox .amount { font-size: 44px; font-weight: 800; letter-spacing: -1px; }
   .cashbox .sub { font-size: 12px; color: #9AE6B4; margin-top: 8px; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: #fff; border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .stat-card .stat-label { font-size: 12px; color: #718096; margin-bottom: 4px; }
+  .stat-card .stat-amount { font-size: 24px; font-weight: 800; }
   .dist-panel { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; }
   .dist-panel h3 { font-size: 16px; font-weight: 700; color: #1A365D; margin-bottom: 16px; }
   .dist-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F0F4F8; }
@@ -80,6 +84,11 @@
   .dist-names { font-size: 12px; color: #718096; }
   .dist-total { font-size: 14px; font-weight: 700; color: #E53E3E; }
   .del-btn { background: #FFF5F5; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; color: #E53E3E; font-size: 12px; margin-right: 10px; }
+  .add-dist { margin-top: 16px; padding-top: 16px; border-top: 2px dashed #E2E8F0; }
+  .add-label { font-size: 13px; font-weight: 600; color: #4A5568; margin-bottom: 10px; }
+  .dist-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .dist-inputs input { border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; font-family: inherit; text-align: right; width: 100%; }
+  .add-dist-btn { width: 100%; padding: 10px; background: #2D5A8E; color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
   .empty-msg { color: #A0AEC0; font-size: 13px; text-align: center; padding: 10px 0; }
   .history-title { font-size: 16px; font-weight: 700; color: #1A365D; }
   .history-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -171,7 +180,7 @@
     <div class="partners-grid">
       <div class="partner-card">
         <div class="partner-name">יוסי</div>
-        <div class="partner-pct">80% מהרווח (מיולי 2026)</div>
+        <div class="partner-pct">80% מהרווח (מיוני 2026)</div>
         <div class="partner-stat-row"><span>צבור</span><span id="yossi-accum">₪0</span></div>
         <div class="partner-stat-row"><span>נמשך</span><span id="yossi-drawn">₪0</span></div>
         <div class="partner-avail-row">
@@ -182,7 +191,7 @@
       </div>
       <div class="partner-card">
         <div class="partner-name">שרוליק</div>
-        <div class="partner-pct">20% מהרווח (מיולי 2026)</div>
+        <div class="partner-pct">20% מהרווח (מיוני 2026)</div>
         <div class="partner-stat-row"><span>צבור</span><span id="shrolik-accum">₪0</span></div>
         <div class="partner-stat-row"><span>נמשך</span><span id="shrolik-drawn">₪0</span></div>
         <div class="partner-avail-row">
@@ -324,7 +333,7 @@ var VIEW_ORDER = ['summary','entry','history'];
 var VIEW_BTN_IDX = {summary:0,entry:1,history:2};
 var PARTNER_SPLIT_NEW = { yossi: 0.80, shrolik: 0.20 };
 var PARTNER_SPLIT_OLD = { yossi: 0.50, shrolik: 0.50 };
-var SPLIT_CHANGE_KEY = '2026-07';
+var SPLIT_CHANGE_KEY = '2026-06';
 var _withdrawPartner = null;
 
 function calcPartnerAccum(data) {
@@ -458,12 +467,11 @@ function renderEntry() {
         '<div class="cat-label">'+cat.label+'</div>'+
         '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
           ' data-key="'+cat.key+'"'+
-          ' onfocus="this.style.borderColor=\''+cat.color+'\''+'"'+
-          ' onblur="this.style.borderColor=\'#E2E8F0\''+'"'+
+          ' onfocus="this.style.borderColor=\''+cat.color+'\'"' +
+          ' onblur="this.style.borderColor=\'#E2E8F0\'"' +
           ' oninput="updateMonthlySummary()">'+
       '</div>'+
-      '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+
-        (val!==''?'₪'+Number(val).toLocaleString():'')+
+      '<div class="cat-value" id="val-'+cat.key+'" style="color:'+cat.color+'">'+(val!==''?'₪'+Number(val).toLocaleString():'')+
       '</div>';
     list.appendChild(card);
   });
@@ -533,12 +541,12 @@ function addMiscRow(note, amount) {
   var amtVal = amount || '';
   row.innerHTML =
     '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+noteVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\''+'"'+
-    ' onblur="this.style.borderColor=\'#E2E8F0\''+'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="scheduleDraftSave()">'+
     '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+amtVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\''+'"'+
-    ' onblur="this.style.borderColor=\'#E2E8F0\''+'"'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
+    ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="updateMiscTotal();updateMonthlySummary()">'+
     '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>';
   document.getElementById('misc-rows').appendChild(row);
@@ -696,7 +704,7 @@ function renderChart() {
   var ptsStr = pts.join(' ');
   svg.innerHTML =
     '<polygon fill="rgba(74,144,217,0.12)" stroke="none" points="'+PAD+','+H+' '+ptsStr+' '+(W-PAD)+','+H+'"/>'+
-    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'"/>';
+    '<polyline fill="none" stroke="#4A90D9" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" points="'+ptsStr+'" />';
 }
 
 function renderHistory() {
