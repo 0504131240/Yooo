@@ -281,8 +281,16 @@ var HIST_DISTS = [
   {id:"d5",date:"2026-05-07",yossi:10900,shrolik:10900}
 ];
 
-var activeYear  = new Date().getFullYear();
-var activeMonth = new Date().getMonth();
+function currentBillingMonth() {
+  var now = new Date();
+  var d = now.getDate(), m = now.getMonth(), y = now.getFullYear();
+  if (d >= 15) { m++; if (m > 11) { m = 0; y++; } }
+  return { year: y, month: m };
+}
+
+var _cur = currentBillingMonth();
+var activeYear  = _cur.year;
+var activeMonth = _cur.month;
 var allData = {};
 var allDist = [];
 var currentView = 'summary';
@@ -410,7 +418,7 @@ function renderEntry() {
         '<div class="cat-label">'+cat.label+'</div>'+
         '<input class="cat-input" type="number" placeholder="0" value="'+val+'" min="0"'+
           ' data-key="'+cat.key+'"'+
-          ' onfocus="this.style.borderColor=\''+cat.color+'\' "'+
+          ' onfocus="this.style.borderColor=\''+cat.color+'\'"'+
           ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
           ' oninput="updateMonthlySummary()">'+
       '</div>'+
@@ -437,8 +445,8 @@ function renderEntry() {
   btn.classList.remove('saved');
   btn.textContent = 'שמור חודש';
   btn.disabled = false;
-  var now = new Date();
-  document.getElementById('today-btn').disabled = (activeYear===now.getFullYear()&&activeMonth===now.getMonth());
+  var cur = currentBillingMonth();
+  document.getElementById('today-btn').disabled = (activeYear===cur.year&&activeMonth===cur.month);
   var badge = document.getElementById('draft-badge');
   if (badge) badge.textContent = '';
   if (!saved) restoreDraft(key);
@@ -472,8 +480,8 @@ function changeMonth(dir) {
 }
 
 function goToToday() {
-  var now = new Date();
-  activeYear=now.getFullYear(); activeMonth=now.getMonth();
+  var cur = currentBillingMonth();
+  activeYear=cur.year; activeMonth=cur.month;
   renderEntry();
 }
 
@@ -485,11 +493,11 @@ function addMiscRow(note, amount) {
   var amtVal = amount || '';
   row.innerHTML =
     '<input type="text" class="misc-row-note" placeholder="פירוט" value="'+noteVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\' "'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
     ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="scheduleDraftSave()">'+
     '<input type="number" class="misc-row-amount" placeholder="₪" min="0" value="'+amtVal+'"'+
-    ' onfocus="this.style.borderColor=\''+mc+'\' "'+
+    ' onfocus="this.style.borderColor=\''+mc+'\'"'+
     ' onblur="this.style.borderColor=\'#E2E8F0\'"'+
     ' oninput="updateMiscTotal();updateMonthlySummary()">'+
     '<button class="misc-row-del" onclick="this.closest(\'.misc-row\').remove();updateMiscTotal();updateMonthlySummary();scheduleDraftSave()">✕</button>';
@@ -626,8 +634,8 @@ function renderHistory() {
     list.innerHTML='<div class="no-history"><div style="font-size:32px;margin-bottom:8px">📋</div><div>עדיין לא הוזנו חודשים</div></div>';
     return;
   }
-  var now = new Date();
-  var curKey = monthKey(now.getFullYear(), now.getMonth());
+  var cur = currentBillingMonth();
+  var curKey = monthKey(cur.year, cur.month);
   var byYear = {};
   keys.forEach(function(k){
     var yr = k.split('-')[0];
