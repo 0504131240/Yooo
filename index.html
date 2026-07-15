@@ -337,8 +337,11 @@ var SPLIT_CHANGE_KEY = '2026-06';
 var _withdrawPartner = null;
 
 function calcPartnerAccum(data) {
+  var cur = currentBillingMonth();
+  var curKey = monthKey(cur.year, cur.month);
   var yossi = 0, shrolik = 0;
   Object.keys(data).forEach(function(k) {
+    if (k >= curKey) return; // חודש שעדיין לא נסגר — לא נכנס לקופה
     var bal = monthBalance(data[k]);
     var split = k >= SPLIT_CHANGE_KEY ? PARTNER_SPLIT_NEW : PARTNER_SPLIT_OLD;
     yossi   += Math.round(bal * split.yossi);
